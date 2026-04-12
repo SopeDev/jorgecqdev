@@ -3,15 +3,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Global visual direction: see VISUAL-DIRECTION.md. Dark editorial / refined brutalist. Accent #3B82F6 sparingly. */
+/* Global visual direction: see VISUAL-DIRECTION.md. Dark editorial / refined brutalist. Accent: logo teal (--logo-teal), used sparingly. */
 :root {
+  /* Logo / wordmark teal (sampled from public/logo-white.png) — primary accent */
+  --logo-teal: #57bfbe;
   --background: #f4f4f5;
   --foreground: #18181b;
   --card: #ffffff;
   --card-foreground: #18181b;
   --popover: #ffffff;
   --popover-foreground: #18181b;
-  --primary: #3b82f6;
+  --primary: var(--logo-teal);
   --primary-foreground: #0b0b0c;
   --secondary: #f4f4f5;
   --secondary-foreground: #18181b;
@@ -23,7 +25,7 @@
   --destructive-foreground: #eaeaea;
   --border: #e4e4e7;
   --input: #e4e4e7;
-  --ring: #3b82f6;
+  --ring: var(--logo-teal);
   --card-hover: #f4f4f5;
   --font-mono: ui-monospace, monospace;
   --radius: 0.25rem;
@@ -44,7 +46,7 @@
   --card-foreground: #eaeaea;
   --popover: #111113;
   --popover-foreground: #eaeaea;
-  --primary: #3b82f6;
+  --primary: var(--logo-teal);
   --primary-foreground: #0b0b0c;
   --secondary: #111113;
   --secondary-foreground: #eaeaea;
@@ -56,7 +58,7 @@
   --destructive-foreground: #eaeaea;
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.08);
-  --ring: #3b82f6;
+  --ring: var(--logo-teal);
   --card-hover: #151518;
   /* Elevated surface steps (editorial panels — no ad-hoc hex in components) */
   --surface-canvas: #0b0b0c;
@@ -67,16 +69,14 @@
   --surface-emphasis: #0e0e12;
   /* Cool steel tones — large fields / diagram context only */
   --steel-muted: #101318;
-  --steel-field: rgba(59, 130, 246, 0.1);
+  --steel-field: rgba(87, 191, 190, 0.1);
   /* Diagram / rail lines (orthogonal system graphics) */
   --line-subtle: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.14);
   --line-diagram: rgba(255, 255, 255, 0.1);
   /* Signal accent at opacity (markers, rare fills) */
-  --primary-soft: rgba(59, 130, 246, 0.12);
-  --primary-stroke: rgba(59, 130, 246, 0.4);
-  /* Logo / wordmark teal (sampled from public/logo-white.png) */
-  --logo-teal: #57bfbe;
+  --primary-soft: rgba(87, 191, 190, 0.12);
+  --primary-stroke: rgba(87, 191, 190, 0.4);
   /* Typography scale — section rhythm */
   --text-display: clamp(2.35rem, 4.2vw + 1.25rem, 3.5rem);
   --text-display-leading: 1.02;

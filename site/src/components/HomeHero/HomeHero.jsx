@@ -72,7 +72,7 @@ export function HomeHero() {
                 className="mx-auto max-w-[min(21rem,90vw)] text-balance text-center text-[length:var(--text-display)] font-extrabold leading-[var(--text-display-leading)] tracking-[-0.035em] text-foreground sm:max-w-xl md:mx-0 md:max-w-[min(30rem,92%)] md:pr-1 md:text-left lg:max-w-[min(32.5rem,94%)]"
               >
                 Construyo sistemas que{' '}
-                <span className="text-[color:var(--logo-teal)]">funcionan</span>.
+                <span className="text-primary">funcionan</span>.
               </h1>
               <p
                 data-hero-deck
