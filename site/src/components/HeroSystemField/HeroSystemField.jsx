@@ -11,10 +11,17 @@ gsap.registerPlugin(ScrollTrigger)
 const NODE_COUNT = 65
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
-/** Canvas shadowBlur for node halos (px). */
+/** Canvas shadowBlur for node halos (px); scaled per-node by depth. */
 const GLOW_BLUR = 26
-/** Peak white alpha in shadowColor (scaled by `breathe`). */
+/** Peak white alpha in shadowColor (scaled by `breathe`); scaled per-node by depth. */
 const NODE_GLOW_ALPHA = 0.42
+/** Base dot radius (px); depth scales between DEPTH_RADIUS_MIN_FR and 1. */
+const NODE_RADIUS = 1.65
+const DEPTH_RADIUS_MIN_FR = 0.52
+/** Fill / glow alpha multiplier at depth 0 vs1 (adds layering). */
+const DEPTH_INTENSITY_MIN_FR = 0.32
+/** Link alpha scales by geometric mean of endpoint depths (so far–far links fade). */
+const DEPTH_LINK_MIN_FR = 0.12
 /** Initial spawn inset (fraction of min side) — smaller = closer to edges. */
 const SPAWN_PAD_FR = 0.02
 /** Bounce margin so nodes / glow can reach near the rim without clipping. */
@@ -25,14 +32,19 @@ const SCROLL_PARALLAX_Y = 100
 
 function initNodes(w, h) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
-  return Array.from({ length: NODE_COUNT }, () => ({
-    x: pad + Math.random() * (w - 2 * pad),
-    y: pad + Math.random() * (h - 2 * pad),
-    vx: (Math.random() - 0.5) * 18,
-    vy: (Math.random() - 0.5) * 18,
-    phase: Math.random() * Math.PI * 2,
-    pulse: 0.65 + Math.random() * 0.35,
-  }))
+  return Array.from({ length: NODE_COUNT }, () => {
+    /** 0 = back, 1 = front — drives size, brightness, and link weight. */
+    const depth = Math.pow(Math.random(), 0.85)
+    return {
+      x: pad + Math.random() * (w - 2 * pad),
+      y: pad + Math.random() * (h - 2 * pad),
+      vx: (Math.random() - 0.5) * 18,
+      vy: (Math.random() - 0.5) * 18,
+      phase: Math.random() * Math.PI * 2,
+      pulse: 0.65 + Math.random() * 0.35,
+      depth,
+    }
+  })
 }
 
 function dist2(ax, ay, bx, by) {
@@ -143,9 +155,15 @@ export function HeroSystemField({ className }) {
           if (d2 >= maxD2) continue
           const d = Math.sqrt(d2)
           const nudge = 0.5 + 0.5 * Math.sin(t * 0.55 + a.phase * 0.3 + b.phase * 0.7)
-          const flicker = 0.78 + 0.22 * nudge * a.pulse * b.pulse
+                   const flicker = 0.78 + 0.22 * nudge * a.pulse * b.pulse
           const falloff = 1 - d / maxD
-          const alpha = LINE_ALPHA_MAX * falloff * falloff * flicker
+          const linkDepth =
+            Math.sqrt(
+              (DEPTH_LINK_MIN_FR + (1 - DEPTH_LINK_MIN_FR) * a.depth) *
+                (DEPTH_LINK_MIN_FR + (1 - DEPTH_LINK_MIN_FR) * b.depth)
+            )
+          const alpha =
+            LINE_ALPHA_MAX * falloff * falloff * flicker * linkDepth
           ctx.strokeStyle = `rgba(255,255,255,${alpha})`
           ctx.beginPath()
           ctx.moveTo(a.x, a.y)
@@ -156,13 +174,18 @@ export function HeroSystemField({ className }) {
 
       for (const n of nodes) {
         const breathe = 0.88 + 0.12 * Math.sin(t * 0.9 + n.phase)
+        const intensity =
+          DEPTH_INTENSITY_MIN_FR + (1 - DEPTH_INTENSITY_MIN_FR) * n.depth
+        const radius =
+          NODE_RADIUS *
+          (DEPTH_RADIUS_MIN_FR + (1 - DEPTH_RADIUS_MIN_FR) * n.depth)
         ctx.shadowOffsetX = 0
         ctx.shadowOffsetY = 0
-        ctx.shadowColor = `rgba(255,255,255,${NODE_GLOW_ALPHA * breathe})`
-        ctx.shadowBlur = GLOW_BLUR
-        ctx.fillStyle = `rgba(255,255,255,${NODE_ALPHA * breathe})`
+        ctx.shadowColor = `rgba(255,255,255,${NODE_GLOW_ALPHA * breathe * intensity})`
+        ctx.shadowBlur = GLOW_BLUR * (0.5 + 0.5 * n.depth)
+        ctx.fillStyle = `rgba(255,255,255,${NODE_ALPHA * breathe * intensity})`
         ctx.beginPath()
-        ctx.arc(n.x, n.y, 1.65, 0, Math.PI * 2)
+        ctx.arc(n.x, n.y, radius, 0, Math.PI * 2)
         ctx.fill()
         ctx.shadowBlur = 0
       }
