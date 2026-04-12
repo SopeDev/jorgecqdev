@@ -1,0 +1,206 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Global visual direction: see VISUAL-DIRECTION.md. Dark editorial / refined brutalist. Accent #3B82F6 sparingly. */
+:root {
+  --background: #f4f4f5;
+  --foreground: #18181b;
+  --card: #ffffff;
+  --card-foreground: #18181b;
+  --popover: #ffffff;
+  --popover-foreground: #18181b;
+  --primary: #3b82f6;
+  --primary-foreground: #0b0b0c;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #dc2626;
+  --destructive-foreground: #eaeaea;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #3b82f6;
+  --card-hover: #f4f4f5;
+  --font-mono: ui-monospace, monospace;
+  --radius: 0.25rem;
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+}
+
+.dark {
+  --background: #0b0b0c;
+  --foreground: #eaeaea;
+  --card: #111113;
+  --card-foreground: #eaeaea;
+  --popover: #111113;
+  --popover-foreground: #eaeaea;
+  --primary: #3b82f6;
+  --primary-foreground: #0b0b0c;
+  --secondary: #111113;
+  --secondary-foreground: #eaeaea;
+  --muted: #111113;
+  --muted-foreground: #a1a1aa;
+  --accent: #1f1f23;
+  --accent-foreground: #eaeaea;
+  --destructive: #b91c1c;
+  --destructive-foreground: #eaeaea;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #3b82f6;
+  --card-hover: #151518;
+  /* Elevated surface steps (editorial panels — no ad-hoc hex in components) */
+  --surface-canvas: #0b0b0c;
+  --surface-elevated: #111113;
+  --surface-panel: #0f0f10;
+  --surface-recess: #0e0e11;
+  --surface-deeper: #09090a;
+  --surface-emphasis: #0e0e12;
+  /* Cool steel tones — large fields / diagram context only */
+  --steel-muted: #101318;
+  --steel-field: rgba(59, 130, 246, 0.1);
+  /* Diagram / rail lines (orthogonal system graphics) */
+  --line-subtle: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --line-diagram: rgba(255, 255, 255, 0.1);
+  /* Signal accent at opacity (markers, rare fills) */
+  --primary-soft: rgba(59, 130, 246, 0.12);
+  --primary-stroke: rgba(59, 130, 246, 0.4);
+  /* Typography scale — section rhythm */
+  --text-display: clamp(2.35rem, 4.2vw + 1.25rem, 3.5rem);
+  --text-display-leading: 1.02;
+  --text-section: clamp(1.25rem, 1.5vw + 0.85rem, 1.5rem);
+  --text-section-leading: 1.2;
+  --text-deck: clamp(0.875rem, 0.4vw + 0.8rem, 0.9375rem);
+  --text-deck-leading: 1.65;
+  --text-label: 0.6875rem;
+  --text-label-md: 0.7rem;
+  /* Section vertical rhythm */
+  --section-py: 6rem;
+  --section-py-md: 8rem;
+  --section-py-deep: 7.5rem;
+  --section-py-deep-md: 11rem;
+  --intro-gap-eyebrow: 0.75rem;
+  --intro-gap-title: 1.25rem;
+  /* Shared noise tile (data URL) — opacity via utility classes */
+  --noise-tile-url: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --shadow-2xs: none;
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-card-hover: var(--card-hover);
+  --color-surface-canvas: var(--surface-canvas);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-panel: var(--surface-panel);
+  --color-surface-recess: var(--surface-recess);
+  --color-surface-deeper: var(--surface-deeper);
+  --color-surface-emphasis: var(--surface-emphasis);
+  --color-steel-muted: var(--steel-muted);
+  --color-steel-field: var(--steel-field);
+  --color-line-subtle: var(--line-subtle);
+  --color-line-strong: var(--line-strong);
+  --color-line-diagram: var(--line-diagram);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-stroke: var(--primary-stroke);
+
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono);
+
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/40;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    /* Geist Mono from next/font (layout.js); Tailwind `font-mono` reads --font-mono */
+    --font-mono: var(--font-geist-mono, ui-monospace, monospace);
+  }
+}
+
+/**
+ * Graphic language guardrails (plan Phase 2):
+ * Max two motif types per section; strokes use line-diagram / border; square caps only in SVGs.
+ * Noise: hero vs ambient opacity only — see .noise-hero / .noise-ambient.
+ */
+@layer utilities {
+  .noise-hero {
+    background-image: var(--noise-tile-url);
+    background-repeat: repeat;
+    opacity: 0.055;
+  }
+  .noise-ambient {
+    background-image: var(--noise-tile-url);
+    background-repeat: repeat;
+    opacity: 0.028;
+  }
+  /* Light fields: ≤6% white; fixed position per section via absolute inset + pointer-events-none */
+  .field-radial-soft {
+    background-image: radial-gradient(
+      ellipse 78% 58% at 48% 34%,
+      rgba(255, 255, 255, 0.065) 0%,
+      transparent 58%
+    );
+  }
+  .field-radial-steel {
+    background-image: radial-gradient(
+      ellipse 40% 60% at 30% 50%,
+      var(--steel-field) 0%,
+      transparent 60%
+    );
+  }
+  .border-line-diagram {
+    border-color: var(--line-diagram);
+  }
+}
+

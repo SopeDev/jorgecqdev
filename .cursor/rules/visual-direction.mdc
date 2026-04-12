@@ -1,0 +1,32 @@
+---
+description: Global visual direction for jorgeCQ site — editorial, structured, refined brutalist dark UI
+alwaysApply: true
+---
+
+# Visual direction (jorgeCQ / `site/`)
+
+Read and follow **`VISUAL-DIRECTION.md`** at the workspace root for full detail. Summary:
+
+## Feel
+
+- Intentional, **editorial**, structured, **refined brutalist**, calm but sharp — **not** generic minimal, not SaaS-template, not “friendly startup.”
+- Sections read as **blocks of thought**, not generic UI components.
+
+## Layout
+
+- **Do not default to centered everything.** Prefer asymmetry, strong columns, and editorial hierarchy where it fits.
+- Large vertical rhythm between sections (`py-24+`); tighter spacing inside cards/lists.
+
+## Color (dark)
+
+- Background `#0B0B0C`, surfaces/cards `#111113`, text `#EAEAEA` / `#A1A1AA`, accent `#3B82F6` **very sparingly**, borders `rgba(255,255,255,0.08)` (see `site/src/app/globals.css`).
+
+## Type
+
+- Headings: **editorial**, not dashboard labels. Hierarchy must be obvious.
+
+## Motion
+
+- Subtle hovers only; no flashy transitions; no motion without purpose.
+
+When implementing new UI, verify: calm, sharp, intentional — and simplify anything that feels like a stock SaaS landing.
