@@ -64,12 +64,15 @@ export function HomeHero() {
               className="pointer-events-none absolute -inset-x-6 -top-[10%] bottom-[-14%] z-0 md:-inset-x-10 md:-left-8 md:right-2"
               aria-hidden
             />
-            <div ref={copyRef} className="relative z-[1]">
+            <div
+              ref={copyRef}
+              className="relative z-[1] flex w-full flex-col items-center md:items-start"
+            >
               <h1
                 id="hero-heading"
                 data-hero-title
                 data-hero-reveal
-                className="mx-auto max-w-[min(21rem,90vw)] text-balance text-center text-[length:var(--text-display)] font-extrabold leading-[var(--text-display-leading)] tracking-[-0.035em] text-foreground sm:max-w-xl md:mx-0 md:max-w-[min(30rem,92%)] md:pr-1 md:text-left lg:max-w-[min(32.5rem,94%)]"
+                className="mx-auto w-full max-w-[min(21rem,90vw)] text-balance text-center text-[length:var(--text-display)] font-extrabold leading-[var(--text-display-leading)] tracking-[-0.035em] text-foreground sm:max-w-xl md:mx-0 md:max-w-[min(30rem,92%)] md:pr-1 md:text-left lg:max-w-[min(32.5rem,94%)]"
               >
                 Construyo sistemas que{' '}
                 <span className="text-primary">funcionan</span>.
@@ -77,21 +80,18 @@ export function HomeHero() {
               <p
                 data-hero-deck
                 data-hero-reveal
-                className="mt-8 max-w-[min(19.5rem,90vw)] text-center text-[length:var(--text-deck)] font-normal leading-[var(--text-deck-leading)] text-muted-foreground sm:max-w-md md:mx-0 md:max-w-[min(27rem,94%)] md:pr-2 md:text-left md:text-[1.0625rem]"
+                className="mt-8 w-full max-w-[min(19.5rem,90vw)] text-center text-[length:var(--text-deck)] font-normal leading-[var(--text-deck-leading)] text-muted-foreground sm:max-w-md md:max-w-[min(27rem,94%)] md:pr-2 md:text-left md:text-[1.0625rem]"
               >
                 Tomo ideas, problemas o procesos desordenados y los convierto en productos claros,
                 utilizables y escalables.
               </p>
-              <p
-                data-hero-reveal
-                className="mx-auto mt-6 max-w-sm text-center text-sm text-muted-foreground md:mx-0 md:max-w-md md:text-left"
-              >
-                Menos ruido. Más estructura. Mejor ejecución.
-              </p>
               <div
                 data-hero-reveal
-                className="mx-auto mt-12 flex w-full max-w-md flex-wrap items-center justify-center gap-3 md:mx-0 md:justify-start"
+                className="mt-12 flex w-full max-w-md flex-wrap items-center justify-center gap-3 md:justify-start"
               >
+                <MinimalButton href="/contact" variant="solid" size="lg">
+                  Contacto
+                </MinimalButton>
                 <MinimalButton
                   href="#que-hago"
                   variant="outline"
@@ -99,14 +99,6 @@ export function HomeHero() {
                   className="border-white/[0.14] bg-background/45 text-foreground backdrop-blur-[2px] hover:bg-card-hover/85 md:border-white/[0.17]"
                 >
                   Seguir leyendo
-                </MinimalButton>
-                <MinimalButton
-                  href="/contact"
-                  variant="ghost"
-                  size="lg"
-                  className="text-foreground/88 hover:bg-card-hover/55 hover:text-foreground"
-                >
-                  Contacto
                 </MinimalButton>
               </div>
             </div>
