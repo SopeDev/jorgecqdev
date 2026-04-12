@@ -75,6 +75,8 @@
   /* Signal accent at opacity (markers, rare fills) */
   --primary-soft: rgba(59, 130, 246, 0.12);
   --primary-stroke: rgba(59, 130, 246, 0.4);
+  /* Logo / wordmark teal (sampled from public/logo-white.png) */
+  --logo-teal: #57bfbe;
   /* Typography scale — section rhythm */
   --text-display: clamp(2.35rem, 4.2vw + 1.25rem, 3.5rem);
   --text-display-leading: 1.02;
