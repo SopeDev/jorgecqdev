@@ -4,11 +4,9 @@
 
 export const ENFOQUE_CONTENT = {
   eyebrow: 'Enfoque',
-  title: 'Mas que sitios web, construyo sistemas',
+  title: 'No solo sitios. Herramientas que trabajan para ti.',
   lines: [
-    'No se trata solo de tener presencia en internet.',
-    'Se trata de construir herramientas que realmente aporten valor a tu negocio.',
-    'Trabajo con clientes que buscan mas que una pagina bonita: negocios que quieren automatizar procesos, mejorar su operacion, vender mas o crear productos digitales propios.',
+    'No se trata solo de tener presencia en internet. Se trata de construir herramientas que realmente aporten valor a tu negocio.',
     'Cada proyecto lo abordo con una vision clara: que lo que construyamos funcione hoy, pero tambien tenga espacio para crecer.',
   ],
 }
