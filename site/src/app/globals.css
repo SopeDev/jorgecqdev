@@ -1,5 +1,6 @@
-@import "tailwindcss";
-@import "shadcn/tailwind.css";
+/* Relative to node_modules so resolvers that use the repo parent as cwd still find packages */
+@import "../../node_modules/tailwindcss/index.css";
+@import "../../node_modules/shadcn/dist/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 

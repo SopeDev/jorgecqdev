@@ -1,12 +1,8 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
-import { gsap } from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { cn } from '@/lib/utils'
-
-gsap.registerPlugin(ScrollTrigger)
 
 const NODE_COUNT = 65
 const LINE_ALPHA_MAX = 0.26
@@ -26,10 +22,8 @@ const DEPTH_LINK_MIN_FR = 0.12
 const SPAWN_PAD_FR = 0.02
 /** Bounce margin so nodes / glow can reach near the rim without clipping. */
 const BOUNCE_MARGIN_FR = 0.014
-/** Scroll progress (0→1) scales these pixel offsets on the canvas layer. */
-const SCROLL_PARALLAX_X = 0
-const SCROLL_PARALLAX_Y = 100
-
+const TARGET_FPS = 30
+const FRAME_TIME = 1000 / TARGET_FPS
 function initNodes(w, h) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
   return Array.from({ length: NODE_COUNT }, () => {
@@ -54,16 +48,17 @@ function dist2(ax, ay, bx, by) {
 }
 
 /**
- * Low-contrast node–link field: drift, soft link breathing, mouse + scroll parallax.
+ * Low-contrast node–link field: drift, soft link breathing, mouse parallax.
  */
-export function HeroSystemField({ className }) {
+export function HeroSystemField({ className, ...props }) {
   const wrapRef = useRef(null)
   const canvasRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
   const mouseRef = useRef({ x: 0, y: 0, tx: 0, ty: 0 })
-  const scrollRef = useRef(0)
   const stateRef = useRef(null)
   const lastTRef = useRef(0)
+  const lastPaintRef = useRef(0)
+  const inViewRef = useRef(true)
 
   useEffect(() => {
     const wrap = wrapRef.current
@@ -72,8 +67,6 @@ export function HeroSystemField({ className }) {
 
     const ctx = canvas.getContext('2d', { alpha: true })
     if (!ctx) return
-
-    let scrollTrigger
 
     const onMove = (e) => {
       mouseRef.current.tx = (e.clientX / window.innerWidth - 0.5) * 1
@@ -110,20 +103,15 @@ export function HeroSystemField({ className }) {
     ro.observe(wrap)
     resize()
 
-    const trigger = wrap.closest('[data-hero-section]')
-    if (trigger) {
-      scrollTrigger = ScrollTrigger.create({
-        trigger,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: 0.45,
-        onUpdate: (self) => {
-          scrollRef.current = self.progress
-        },
-      })
-    }
-
     window.addEventListener('mousemove', onMove, { passive: true })
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        inViewRef.current = entries[0]?.isIntersecting ?? true
+      },
+      { threshold: 0.01 }
+    )
+    io.observe(wrap)
 
     const drawFrame = (timeMs) => {
       const st = stateRef.current
@@ -133,9 +121,8 @@ export function HeroSystemField({ className }) {
       mr.x += (mr.tx - mr.x) * 0.045
       mr.y += (mr.ty - mr.y) * 0.045
 
-      const sp = scrollRef.current
-      const parallaxX = mr.x * 14 + sp * SCROLL_PARALLAX_X
-      const parallaxY = mr.y * 10 + sp * SCROLL_PARALLAX_Y
+      const parallaxX = mr.x * 14
+      const parallaxY = mr.y * 10
 
       const t = timeMs * 0.001
       const maxD = Math.min(w, h) * 0.25
@@ -227,13 +214,15 @@ export function HeroSystemField({ className }) {
       return () => {
         ro.disconnect()
         window.removeEventListener('mousemove', onMove)
-        scrollTrigger?.kill()
       }
     }
 
     let rafId = 0
     const loop = (now) => {
-      drawFrame(now)
+      if (inViewRef.current && now - lastPaintRef.current >= FRAME_TIME) {
+        drawFrame(now)
+        lastPaintRef.current = now
+      }
       rafId = requestAnimationFrame(loop)
     }
 
@@ -253,8 +242,8 @@ export function HeroSystemField({ className }) {
       cancelAnimationFrame(rafId)
       document.removeEventListener('visibilitychange', onVisibility)
       ro.disconnect()
+      io.disconnect()
       window.removeEventListener('mousemove', onMove)
-      scrollTrigger?.kill()
     }
   }, [prefersReduced])
 
@@ -262,6 +251,7 @@ export function HeroSystemField({ className }) {
     <div
       ref={wrapRef}
       className={cn('pointer-events-none absolute inset-0 -z-10', className)}
+      {...props}
       aria-hidden
     >
       <canvas

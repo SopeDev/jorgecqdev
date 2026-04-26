@@ -1,4 +1,5 @@
 import { HomeHero } from '@/components/HomeHero/HomeHero'
+import { HomeFocus } from '@/components/HomeFocus/HomeFocus'
 import { HomeWhatIDo } from '@/components/HomeWhatIDo/HomeWhatIDo'
 import { HomeHowIWork } from '@/components/HomeHowIWork/HomeHowIWork'
 import { HomeProjects } from '@/components/HomeProjects/HomeProjects'
@@ -11,6 +12,7 @@ export default function HomePage() {
     <main>
       <HomeScrollOrchestrator />
       <HomeHero />
+      <HomeFocus />
       <HomeWhatIDo />
       <HomeHowIWork />
       <HomeProjects />
