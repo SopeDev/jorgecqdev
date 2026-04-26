@@ -197,7 +197,7 @@
   }
   .field-radial-steel {
     background-image: radial-gradient(
-      ellipse 40% 60% at 30% 50%,
+      ellipse 50% 70% at 35% 50%,
       var(--steel-field) 0%,
       transparent 60%
     );

@@ -151,7 +151,7 @@ export function Header() {
         aria-label="Principal"
       >
         <div className="inline-flex min-h-[14rem] overflow-hidden px-3 py-5">
-          <div className="flex flex-col items-center justify-center gap-3">
+          <div className="flex flex-col items-center justify-center gap-6">
             {NAV.map((item, index) => (
               <Link
                 key={item.href}

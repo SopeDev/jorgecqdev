@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { MinimalButton } from '@/components/MinimalButton/MinimalButton'
@@ -14,16 +14,24 @@ export function HomeHero() {
   const sectionRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const section = sectionRef.current
     const copy = copyRef.current
     if (!section || !copy) return
 
     const ctx = gsap.context(() => {
       const titleLines = copy.querySelectorAll('[data-hero-title-line]')
+      const paragraph = copy.querySelector('[data-hero-paragraph]')
+      const steelField = section.querySelector('[data-hero-steel-field]')
+      const titleInDelay = 0.12
+      const titleInDuration = 1.2
+      const titleInStagger = 0.3
+      const paragraphInDelay =
+        titleInDelay + titleInDuration + titleInStagger * Math.max(0, titleLines.length - 1) + 0.08
 
       if (prefersReduced) {
         gsap.set(titleLines, { yPercent: 0 })
+        gsap.set(paragraph, { opacity: 1 })
         return
       }
 
@@ -32,12 +40,24 @@ export function HomeHero() {
         { yPercent: 112 },
         {
           yPercent: 0,
-          duration: 1.2,
-          stagger: 0.3,
+          duration: titleInDuration,
+          stagger: titleInStagger,
           ease: 'power3.out',
-          delay: 0.12,
+          delay: titleInDelay,
         }
       )
+      if (paragraph) {
+        gsap.fromTo(
+          paragraph,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: 0.55,
+            ease: 'power2.out',
+            delay: paragraphInDelay,
+          }
+        )
+      }
 
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
@@ -62,6 +82,22 @@ export function HomeHero() {
           },
           0.1
         )
+        .to(
+          paragraph,
+          {
+            opacity: 0,
+            ease: 'none',
+          },
+          0.1
+        )
+        .to(
+          steelField,
+          {
+            opacity: 0,
+            ease: 'none',
+          },
+          0.1
+        )
     }, section)
 
     return () => ctx.revert()
@@ -76,7 +112,11 @@ export function HomeHero() {
       data-hero-section
     >
       <HeroSystemField className="opacity-[0.95]" data-hero-system-field />
-      <div className="pointer-events-none absolute inset-0 -z-10 field-radial-steel" aria-hidden />
+      <div
+        data-hero-steel-field
+        className="pointer-events-none absolute inset-0 -z-10 field-radial-steel will-change-[opacity]"
+        aria-hidden
+      />
       <div
         data-hero-noise
         className="noise-hero pointer-events-none absolute inset-0 -z-10 opacity-85"
