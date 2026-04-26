@@ -202,6 +202,15 @@
       transparent 50%
     );
   }
+  @media (max-width: 767px) {
+    .field-radial-steel {
+      background-image: radial-gradient(
+        ellipse 92% 58% at 50% 50%,
+        var(--steel-field) 0%,
+        transparent 50%
+      );
+    }
+  }
   .border-line-diagram {
     border-color: var(--line-diagram);
   }
