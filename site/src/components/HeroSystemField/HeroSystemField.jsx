@@ -24,6 +24,12 @@ const SPAWN_PAD_FR = 0.02
 const BOUNCE_MARGIN_FR = 0.014
 const TARGET_FPS = 30
 const FRAME_TIME = 1000 / TARGET_FPS
+const MOUSE_LERP = 0.08
+const MOUSE_PARALLAX_X = 24
+const MOUSE_PARALLAX_Y = 17
+const LOCAL_REACT_RADIUS_FR = 0.42
+const LOCAL_REACT_BOOST_X = 68
+const LOCAL_REACT_BOOST_Y = 56
 function initNodes(w, h) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
   return Array.from({ length: NODE_COUNT }, () => {
@@ -118,27 +124,42 @@ export function HeroSystemField({ className, ...props }) {
       if (!st) return
       const { nodes, w, h } = st
       const mr = mouseRef.current
-      mr.x += (mr.tx - mr.x) * 0.045
-      mr.y += (mr.ty - mr.y) * 0.045
+      mr.x += (mr.tx - mr.x) * MOUSE_LERP
+      mr.y += (mr.ty - mr.y) * MOUSE_LERP
 
-      const parallaxX = mr.x * 14
-      const parallaxY = mr.y * 10
+      const parallaxX = mr.x * MOUSE_PARALLAX_X
+      const parallaxY = mr.y * MOUSE_PARALLAX_Y
+      const mouseX = (mr.x + 0.5) * w
+      const mouseY = (mr.y + 0.5) * h
+      const localRadius = Math.min(w, h) * LOCAL_REACT_RADIUS_FR
 
       const t = timeMs * 0.001
       const maxD = Math.min(w, h) * 0.25
       const maxD2 = maxD * maxD
 
+      const rendered = nodes.map((n) => {
+        const dx = n.x - mouseX
+        const dy = n.y - mouseY
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const influence = Math.max(0, 1 - dist / localRadius)
+        const falloff = influence * influence
+        return {
+          x: n.x + parallaxX + mr.x * LOCAL_REACT_BOOST_X * falloff,
+          y: n.y + parallaxY + mr.y * LOCAL_REACT_BOOST_Y * falloff,
+        }
+      })
+
       ctx.clearRect(0, 0, w, h)
-      ctx.save()
-      ctx.translate(parallaxX, parallaxY)
 
       ctx.lineWidth = 1
       ctx.lineCap = 'round'
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
+        const ar = rendered[i]
         for (let j = i + 1; j < nodes.length; j++) {
           const b = nodes[j]
-          const d2 = dist2(a.x, a.y, b.x, b.y)
+          const br = rendered[j]
+          const d2 = dist2(ar.x, ar.y, br.x, br.y)
           if (d2 >= maxD2) continue
           const d = Math.sqrt(d2)
           const nudge = 0.5 + 0.5 * Math.sin(t * 0.55 + a.phase * 0.3 + b.phase * 0.7)
@@ -153,13 +174,15 @@ export function HeroSystemField({ className, ...props }) {
             LINE_ALPHA_MAX * falloff * falloff * flicker * linkDepth
           ctx.strokeStyle = `rgba(255,255,255,${alpha})`
           ctx.beginPath()
-          ctx.moveTo(a.x, a.y)
-          ctx.lineTo(b.x, b.y)
+          ctx.moveTo(ar.x, ar.y)
+          ctx.lineTo(br.x, br.y)
           ctx.stroke()
         }
       }
 
-      for (const n of nodes) {
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i]
+        const nr = rendered[i]
         const breathe = 0.88 + 0.12 * Math.sin(t * 0.9 + n.phase)
         const intensity =
           DEPTH_INTENSITY_MIN_FR + (1 - DEPTH_INTENSITY_MIN_FR) * n.depth
@@ -172,12 +195,10 @@ export function HeroSystemField({ className, ...props }) {
         ctx.shadowBlur = GLOW_BLUR * (0.5 + 0.5 * n.depth)
         ctx.fillStyle = `rgba(255,255,255,${NODE_ALPHA * breathe * intensity})`
         ctx.beginPath()
-        ctx.arc(n.x, n.y, radius, 0, Math.PI * 2)
+        ctx.arc(nr.x, nr.y, radius, 0, Math.PI * 2)
         ctx.fill()
         ctx.shadowBlur = 0
       }
-
-      ctx.restore()
 
       if (!prefersReduced) {
         const last = lastTRef.current || timeMs

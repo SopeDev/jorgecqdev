@@ -159,7 +159,7 @@ export function Header() {
                 ref={(el) => {
                   linksRef.current[index] = el
                 }}
-                className="py-2 text-[clamp(1.7rem,4.2vw,3.25rem)] font-semibold leading-[1.05] tracking-[0.2em] uppercase text-foreground transition-opacity duration-200 hover:opacity-80"
+                className="py-2 text-[clamp(1.7rem,4.2vw,3.25rem)] font-semibold leading-[1.05] tracking-[0.2em] uppercase text-foreground"
                 onClick={() => setNavOpen(false)}
               >
                 <BouncyLetters text={item.label} />
