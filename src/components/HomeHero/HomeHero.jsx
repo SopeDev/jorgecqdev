@@ -56,13 +56,13 @@ export function HomeHero() {
       const focusNodesFadeDuration = focusHeadingDuration * 0.58
       const focusLinesDuration = 0.5
       const focusLinesStagger = 0.1
-      const focusRevealTriggerTime = focusHeadingStart + focusHeadingDuration
-      const focusAutoRevealDuration =
-        focusTitleDuration +
+      const focusTitleStart = focusHeadingStart + focusHeadingDuration + 0.12
+      const focusLinesStart = focusTitleStart + focusTitleDuration + 0.16
+      const focusLinesEndTime =
+        focusLinesStart +
         focusLinesDuration +
-        focusLinesStagger * Math.max(0, focusLines.length - 1) +
-        0.24
-      const focusHoldStart = focusRevealTriggerTime + focusAutoRevealDuration
+        focusLinesStagger * Math.max(0, focusLines.length - 1)
+      const focusHoldStart = focusLinesEndTime + 0.24
       const focusHoldDuration = 0.9
 
       if (prefersReduced) {
@@ -83,42 +83,6 @@ export function HomeHero() {
       gsap.set(focusClipRevealEls, { yPercent: 112 })
       systemField?.setAttribute('data-node-focus-progress', '0')
       gsap.set(systemField, { opacity: 1, filter: 'blur(0px)' })
-
-      let focusCopyRevealed = false
-      let focusCopyRevealRaf = 0
-      const focusCopyTl = gsap
-        .timeline({ paused: true })
-        .to(focusTitle, {
-          yPercent: 0,
-          duration: focusTitleDuration,
-          ease: 'power3.out',
-        })
-        .to(
-          focusLines,
-          {
-            yPercent: 0,
-            duration: focusLinesDuration,
-            stagger: focusLinesStagger,
-            ease: 'power3.out',
-          },
-          '+=0.14'
-        )
-
-      const playFocusCopy = () => {
-        if (focusCopyRevealed) return
-        focusCopyRevealed = true
-        focusCopyRevealRaf = window.requestAnimationFrame(() => {
-          focusCopyTl.play(0)
-        })
-      }
-
-      const resetFocusCopy = () => {
-        if (!focusCopyRevealed && focusCopyTl.progress() === 0) return
-        focusCopyRevealed = false
-        window.cancelAnimationFrame(focusCopyRevealRaf)
-        focusCopyTl.pause(0)
-        gsap.set(focusClipRevealEls, { yPercent: 112 })
-      }
 
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
@@ -215,6 +179,25 @@ export function HomeHero() {
           focusNodesFadeStart
         )
         .to(
+          focusTitle,
+          {
+            yPercent: 0,
+            duration: focusTitleDuration,
+            ease: 'none',
+          },
+          focusTitleStart
+        )
+        .to(
+          focusLines,
+          {
+            yPercent: 0,
+            duration: focusLinesDuration,
+            stagger: focusLinesStagger,
+            ease: 'none',
+          },
+          focusLinesStart
+        )
+        .to(
           focusHold,
           {
             progress: 1,
@@ -223,15 +206,6 @@ export function HomeHero() {
           },
           focusHoldStart
         )
-
-      heroScrollTl.eventCallback('onUpdate', () => {
-        if (heroScrollTl.time() >= focusRevealTriggerTime) {
-          playFocusCopy()
-          return
-        }
-
-        resetFocusCopy()
-      })
 
       const atPageTop = () => window.scrollY <= 2
       const introTl = gsap.timeline({ paused: true })
