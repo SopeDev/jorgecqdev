@@ -400,7 +400,7 @@ export function HeroSystemField({ className, ...props }) {
   return (
     <div
       className={cn(
-        'pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10 [contain:paint]',
+        'pointer-events-none absolute inset-0 -z-10 [contain:paint]',
         className
       )}
       {...props}

@@ -124,6 +124,7 @@ export function HomeHero() {
           start: 'top top',
           end: () => `+=${window.innerHeight * 3.15}`,
           pin: true,
+          pinType: 'fixed',
           pinSpacing: true,
           scrub: 0.9,
           anticipatePin: 1,
@@ -385,19 +386,19 @@ export function HomeHero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative isolate -mt-px flex min-h-[calc(100svh+1px)] flex-col overflow-hidden border-b border-border bg-background"
+      className="relative isolate flex min-h-[100svh] flex-col overflow-hidden border-b border-border bg-background"
       aria-labelledby="hero-heading"
       data-hero-section
     >
       <HeroSystemField className="opacity-[0.95]" data-hero-system-field />
       <div
         data-hero-steel-field
-        className="pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10 field-radial-steel will-change-[opacity]"
+        className="pointer-events-none absolute inset-0 -z-10 field-radial-steel will-change-[opacity]"
         aria-hidden
       />
       <div
         data-hero-noise
-        className="noise-hero pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10 opacity-85"
+        className="noise-hero pointer-events-none absolute inset-0 -z-10 opacity-85"
         aria-hidden
       />
 

@@ -27,29 +27,12 @@ export function HomeScrollOrchestrator() {
       const hero = document.querySelector('#hero')
       if (hero) {
         const field = hero.querySelector('[data-hero-field]')
-        const noise = hero.querySelector('[data-hero-noise]')
         if (field) {
           gsap.fromTo(
             field,
             { y: 0 },
             {
               y: 28,
-              ease: 'none',
-              scrollTrigger: {
-                trigger: hero,
-                start: 'top top',
-                end: 'bottom top',
-                scrub: 0.5,
-              },
-            }
-          )
-        }
-        if (noise) {
-          gsap.fromTo(
-            noise,
-            { y: 0 },
-            {
-              y: 16,
               ease: 'none',
               scrollTrigger: {
                 trigger: hero,
