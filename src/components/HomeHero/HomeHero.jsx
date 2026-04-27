@@ -1,6 +1,6 @@
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
+import { Fragment, useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { MinimalButton } from '@/components/MinimalButton/MinimalButton'
@@ -47,42 +47,48 @@ export function HomeHero() {
       const actions = copy.querySelector('[data-hero-actions]')
       const steelField = section.querySelector('[data-hero-steel-field]')
       const systemField = section.querySelector('[data-hero-system-field]')
+      const focusNodeLayer = section.querySelector('[data-hero-focus-node-layer]')
       const scrollIndicator = section.querySelector('[data-hero-scroll-indicator]')
       const scrollIndicatorLine = section.querySelector('[data-hero-scroll-line]')
       const focusBlock = section.querySelector('[data-focus-block]')
       const focusHeading = section.querySelector('[data-focus-heading-line]')
-      const focusTitle = section.querySelector('[data-focus-title-line]')
+      const focusTitleParts = section.querySelectorAll('[data-focus-title-part]')
       const focusLines = section.querySelectorAll('[data-focus-line]')
-      const focusClipRevealEls = [focusTitle, ...focusLines].filter(Boolean)
+      const focusClipRevealEls = [...focusTitleParts].filter(Boolean)
       const titleInDelay = 0.12
       const titleInDuration = 1.2
       const titleInStagger = 0.3
       const paragraphInDelay =
         titleInDelay + titleInDuration + titleInStagger * Math.max(0, titleLines.length - 1) + 0.08
       const indicatorInDelay = paragraphInDelay + 0.7
+      /**
+       * Pinned scroll = 3.25 * viewport. Timeline units map to viewport chunks:
+       * .9 hero out, .9 enfoque label + canvas, 1.2 h2 + paragraph, .25 final hold.
+       */
+      const TIMELINE_UNITS = 13
+      const SEG_HERO = 3.6
+      const SEG_ENF = 3.6
+      const SEG_BODY = 4.8
+      const T_ENFO = SEG_HERO
+      const T_BODY = SEG_HERO + SEG_ENF
+      const T_HOLD = T_BODY + SEG_BODY
       const heroOutStart = 0.1
-      const heroOutDuration = 0.5
-      const heroOutStagger = 0.22
-      const heroOutEnd =
-        heroOutStart + heroOutDuration + heroOutStagger * Math.max(0, titleLines.length - 1)
-      const focusInStart = heroOutEnd + 0.08
-      const focusHeadingDuration = titleInDuration * 1.12
-      const focusTitleDuration = 0.55
-      const focusNodes = { progress: 0 }
-      const focusHold = { progress: 0 }
-      const focusHeadingStart = focusInStart + 0.04
+      const heroOutDuration = 2.4
+      const heroOutSecondLineDuration = 3
+      const heroOutStagger = 0.5
+      const focusHeadingStart = T_ENFO
+      const focusHeadingDuration = 3
       const focusNodesFadeStart = focusHeadingStart + focusHeadingDuration * 0.5
       const focusNodesFadeDuration = focusHeadingDuration * 0.58
-      const focusLinesDuration = 0.5
-      const focusLinesStagger = 0.1
-      const focusTitleStart = focusHeadingStart + focusHeadingDuration + 0.12
-      const focusLinesStart = focusTitleStart + focusTitleDuration + 0.16
-      const focusLinesEndTime =
-        focusLinesStart +
-        focusLinesDuration +
-        focusLinesStagger * Math.max(0, focusLines.length - 1)
-      const focusHoldStart = focusLinesEndTime + 0.24
-      const focusHoldDuration = 0.9
+      const focusTitleStart = T_BODY
+      const focusTitleDuration = 0.8
+      const focusTitleStagger = 0.38
+      const focusLinesStart = focusTitleStart + focusTitleDuration + focusTitleStagger + 0.28
+      const focusLinesDuration = 1.1
+      const focusHoldStart = T_HOLD
+      const focusHoldDuration = TIMELINE_UNITS - T_HOLD
+      const focusNodes = { progress: 0 }
+      const focusHold = { progress: 0 }
 
       let lastFocusAttr = '0'
 
@@ -93,9 +99,10 @@ export function HomeHero() {
         gsap.set(focusBlock, { opacity: 1 })
         gsap.set(focusHeading, { opacity: 1, filter: 'blur(0px)' })
         gsap.set(focusClipRevealEls, { yPercent: 0 })
+        gsap.set(focusLines, { opacity: 1 })
         systemField?.setAttribute('data-node-focus-progress', '1')
         lastFocusAttr = '1'
-        gsap.set(systemField, { opacity: 0, filter: 'blur(14px)' })
+        gsap.set(focusNodeLayer, { opacity: 0, filter: 'blur(14px)' })
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
         return
@@ -103,14 +110,15 @@ export function HomeHero() {
 
       gsap.set(focusHeading, { opacity: 0, filter: 'blur(50px)' })
       gsap.set(focusClipRevealEls, { yPercent: 112 })
+      gsap.set(focusLines, { opacity: 0, yPercent: 0 })
       systemField?.setAttribute('data-node-focus-progress', '0')
-      gsap.set(systemField, { opacity: 1, filter: 'blur(0px)' })
+      gsap.set(focusNodeLayer, { opacity: 1, filter: 'blur(0px)' })
 
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: 'top top',
-          end: '+=160%',
+          end: () => `+=${window.innerHeight * 3.25}`,
           pin: true,
           pinSpacing: true,
           scrub: 0.9,
@@ -121,17 +129,34 @@ export function HomeHero() {
 
       heroScrollTl
         .to(
-          titleLines,
+          titleLines[0],
           {
             yPercent: -112,
             duration: heroOutDuration,
-            stagger: heroOutStagger,
             ease: 'none',
           },
           heroOutStart
         )
         .to(
+          titleLines[1],
+          {
+            yPercent: -112,
+            duration: heroOutSecondLineDuration,
+            ease: 'none',
+          },
+          heroOutStart + heroOutStagger
+        )
+        .to(
           paragraph,
+          {
+            opacity: 0,
+            duration: heroOutDuration,
+            ease: 'none',
+          },
+          heroOutStart
+        )
+        .to(
+          actions,
           {
             opacity: 0,
             duration: heroOutDuration,
@@ -162,8 +187,9 @@ export function HomeHero() {
           {
             opacity: 1,
             ease: 'none',
+            duration: 0.15,
           },
-          focusInStart
+          T_ENFO
         )
         .to(
           focusHeading,
@@ -191,7 +217,7 @@ export function HomeHero() {
           focusHeadingStart
         )
         .to(
-          systemField,
+          focusNodeLayer,
           {
             opacity: 0,
             filter: 'blur(14px)',
@@ -201,10 +227,11 @@ export function HomeHero() {
           focusNodesFadeStart
         )
         .to(
-          focusTitle,
+          focusTitleParts,
           {
             yPercent: 0,
             duration: focusTitleDuration,
+            stagger: focusTitleStagger,
             ease: 'none',
           },
           focusTitleStart
@@ -212,10 +239,9 @@ export function HomeHero() {
         .to(
           focusLines,
           {
-            yPercent: 0,
+            opacity: 1,
             duration: focusLinesDuration,
-            stagger: focusLinesStagger,
-            ease: 'none',
+            ease: 'power2.out',
           },
           focusLinesStart
         )
@@ -352,19 +378,19 @@ export function HomeHero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative isolate flex min-h-[100svh] flex-col overflow-hidden border-b border-border"
+      className="relative isolate -mt-px flex min-h-[calc(100svh+1px)] flex-col overflow-hidden border-b border-border bg-background"
       aria-labelledby="hero-heading"
       data-hero-section
     >
       <HeroSystemField className="opacity-[0.95]" data-hero-system-field />
       <div
         data-hero-steel-field
-        className="pointer-events-none absolute inset-0 -z-10 field-radial-steel will-change-[opacity]"
+        className="pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10 field-radial-steel will-change-[opacity]"
         aria-hidden
       />
       <div
         data-hero-noise
-        className="noise-hero pointer-events-none absolute inset-0 -z-10 opacity-85"
+        className="noise-hero pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10 opacity-85"
         aria-hidden
       />
 
@@ -440,27 +466,43 @@ export function HomeHero() {
             </div>
           </div>
 
-          <div className="md:col-span-7 md:text-right">
-            <h2 className="ml-auto max-w-2xl text-[clamp(1.18rem,1.75vw,1.85rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-foreground">
-              <span className="block overflow-hidden py-[0.08em]">
+          <div className="pt-[15px] md:col-span-7">
+            <h2 className="max-w-2xl text-[clamp(1.12rem,1.62vw,1.72rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-foreground">
+              <span className="inline-block overflow-hidden py-[0.08em]">
                 <span
-                  data-focus-title-line
-                  className="block pb-[0.08em] will-change-transform"
+                  data-focus-title-part
+                  className="inline-block pb-[0.08em] will-change-transform"
                 >
-                  {ENFOQUE_CONTENT.titleLead}
+                  {ENFOQUE_CONTENT.titleLead.trim()}
+                </span>
+              </span>
+              {' '}
+              <span className="inline-block overflow-hidden py-[0.08em]">
+                <span
+                  data-focus-title-part
+                  className="inline-block pb-[0.08em] will-change-transform"
+                >
                   <span className="text-primary">{ENFOQUE_CONTENT.titleAccent}</span>
                   {'.'}
                 </span>
               </span>
             </h2>
-            <div className="mt-8 ml-auto max-w-2xl space-y-4 text-[clamp(1.02rem,1.1vw,1.24rem)] leading-[1.65] text-muted-foreground md:mt-10">
-              {ENFOQUE_CONTENT.lines.map((line) => (
-                <p key={line} className="overflow-hidden">
-                  <span data-focus-line className="block text-pretty will-change-transform">
-                    {line}
-                  </span>
-                </p>
-              ))}
+            <div className="mt-8 max-w-2xl text-[clamp(1.02rem,1.1vw,1.24rem)] leading-[1.65] text-muted-foreground md:mt-10">
+              <p>
+                <span data-focus-line className="block text-pretty will-change-opacity">
+                  {ENFOQUE_CONTENT.lines.map((line, index) => (
+                    <Fragment key={line}>
+                      {index > 0 ? (
+                        <>
+                          <br />
+                          <br />
+                        </>
+                      ) : null}
+                      {line}
+                    </Fragment>
+                  ))}
+                </span>
+              </p>
             </div>
           </div>
         </div>

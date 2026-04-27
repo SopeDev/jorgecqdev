@@ -4,7 +4,7 @@ import { useRef, useEffect } from 'react'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { cn } from '@/lib/utils'
 
-const NODE_COUNT = 100
+const NODE_COUNT = 50
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
 /** Soft outer halo: circle radius = NODE_RADIUS * this (avoids per-node `shadowBlur`, which is costly). */
@@ -24,6 +24,7 @@ const SPAWN_PAD_FR = 0.02
 const BOUNCE_MARGIN_FR = 0.014
 const TARGET_FPS = 30
 const FRAME_TIME = 1000 / TARGET_FPS
+const LINK_DISTANCE_FR = 0.34
 const MOUSE_LERP = 0.08
 const MOUSE_PARALLAX_X = 24
 const MOUSE_PARALLAX_Y = 17
@@ -80,8 +81,7 @@ function getFocusTargetRect(wrap, target) {
 /**
  * Low-contrast node–link field: drift, soft link breathing, mouse parallax.
  */
-export function HeroSystemField({ className, ...props }) {
-  const wrapRef = useRef(null)
+function NodeLayer({ focusLayer = false }) {
   const canvasRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
   const mouseRef = useRef({ x: 0, y: 0, tx: 0, ty: 0 })
@@ -91,8 +91,8 @@ export function HeroSystemField({ className, ...props }) {
   const inViewRef = useRef(true)
 
   useEffect(() => {
-    const wrap = wrapRef.current
     const canvas = canvasRef.current
+    const wrap = canvas?.parentElement
     if (!wrap || !canvas) return
 
     const ctx = canvas.getContext('2d', { alpha: true })
@@ -173,7 +173,9 @@ export function HeroSystemField({ className, ...props }) {
       }
       const { nodes, w, h } = st
       const mr = mouseRef.current
-      const focusProgress = clamp01(Number(wrap.getAttribute(FOCUS_ATTR)) || 0)
+      const focusProgress = focusLayer
+        ? clamp01(Number(wrap.getAttribute(FOCUS_ATTR)) || 0)
+        : 0
       if (focusProgress > 0 && !focusTargetEl) {
         focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
       }
@@ -191,7 +193,7 @@ export function HeroSystemField({ className, ...props }) {
       const localRadius = Math.min(w, h) * LOCAL_REACT_RADIUS_FR
 
       const t = timeMs * 0.001
-      const maxD = Math.min(w, h) * 0.25
+      const maxD = Math.min(w, h) * LINK_DISTANCE_FR
       const maxD2 = maxD * maxD
       const cellSize = maxD * 0.5
       const ncx = Math.max(1, Math.ceil(w / cellSize) + 1)
@@ -382,19 +384,26 @@ export function HeroSystemField({ className, ...props }) {
       io.disconnect()
       window.removeEventListener('mousemove', onMove)
     }
-  }, [prefersReduced])
+  }, [focusLayer, prefersReduced])
 
   return (
+    <canvas
+      ref={canvasRef}
+      data-hero-focus-node-layer={focusLayer ? '' : undefined}
+      className="absolute inset-0 h-full w-full opacity-[0.6]"
+    />
+  )
+}
+
+export function HeroSystemField({ className, ...props }) {
+  return (
     <div
-      ref={wrapRef}
-      className={cn('pointer-events-none absolute inset-0 -z-10', className)}
+      className={cn('pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10', className)}
       {...props}
       aria-hidden
     >
-      <canvas
-        ref={canvasRef}
-        className="h-full w-full opacity-[0.6]"
-      />
+      <NodeLayer />
+      <NodeLayer focusLayer />
     </div>
   )
 }

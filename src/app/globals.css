@@ -164,10 +164,21 @@
   * {
     @apply border-border outline-ring/40;
   }
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar {
+    display: none;
+  }
   body {
     @apply bg-background text-foreground antialiased;
     /* Geist Mono from next/font (layout.js); Tailwind `font-mono` reads --font-mono */
     --font-mono: var(--font-geist-mono, ui-monospace, monospace);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
+import { Fragment, useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SectionWrapper } from '@/components/SectionWrapper/SectionWrapper'
@@ -19,9 +19,9 @@ export function HomeFocus() {
 
     const ctx = gsap.context(() => {
       const leftHeading = section.querySelector('[data-focus-left-heading]')
-      const rightTitle = section.querySelector('[data-focus-right-title]')
+      const rightTitleParts = section.querySelectorAll('[data-focus-right-title-part]')
       const lines = section.querySelectorAll('[data-focus-line-inner]')
-      const revealEls = [leftHeading, rightTitle, ...lines].filter(Boolean)
+      const revealEls = [leftHeading, ...rightTitleParts, ...lines].filter(Boolean)
 
       if (prefersReduced) {
         gsap.set(revealEls, { yPercent: 0 })
@@ -53,9 +53,9 @@ export function HomeFocus() {
           { yPercent: 0, duration: lineDur, ease: lineEase }
         )
         .fromTo(
-          rightTitle,
+          rightTitleParts,
           lineFrom,
-          { yPercent: 0, duration: 0.48, ease: lineEase },
+          { yPercent: 0, duration: 0.48, stagger: 0.12, ease: lineEase },
           '>'
         )
         .fromTo(
@@ -110,29 +110,45 @@ export function HomeFocus() {
             <h3
               className="max-w-3xl text-[clamp(1.1rem,1.55vw,1.48rem)] font-semibold leading-[1.14] tracking-[-0.02em] text-foreground"
             >
-              <span className="block overflow-hidden py-[0.08em]">
+              <span className="inline-block overflow-hidden py-[0.08em]">
                 <span
-                  data-focus-right-title
-                  className="block pb-[0.08em] will-change-transform"
+                  data-focus-right-title-part
+                  className="inline-block pb-[0.08em] will-change-transform"
                 >
-                  {ENFOQUE_CONTENT.titleLead}
+                  {ENFOQUE_CONTENT.titleLead.trim()}
+                </span>
+              </span>
+              {' '}
+              <span className="inline-block overflow-hidden py-[0.08em]">
+                <span
+                  data-focus-right-title-part
+                  className="inline-block pb-[0.08em] will-change-transform"
+                >
                   <span className="text-primary">{ENFOQUE_CONTENT.titleAccent}</span>
                   {'.'}
                 </span>
               </span>
             </h3>
 
-            <div className="mt-8 max-w-4xl space-y-5 text-[clamp(1.03rem,1.15vw,1.34rem)] leading-[1.7] text-muted-foreground md:mt-9">
-              {ENFOQUE_CONTENT.lines.map((line) => (
-                <p key={line} className="overflow-hidden">
-                  <span
-                    data-focus-line-inner
-                    className="block text-pretty will-change-transform"
-                  >
-                    {line}
-                  </span>
-                </p>
-              ))}
+            <div className="mt-8 max-w-4xl text-[clamp(1.03rem,1.15vw,1.34rem)] leading-[1.7] text-muted-foreground md:mt-9">
+              <p className="overflow-hidden">
+                <span
+                  data-focus-line-inner
+                  className="block text-pretty will-change-transform"
+                >
+                  {ENFOQUE_CONTENT.lines.map((line, index) => (
+                    <Fragment key={line}>
+                      {index > 0 ? (
+                        <>
+                          <br />
+                          <br />
+                        </>
+                      ) : null}
+                      {line}
+                    </Fragment>
+                  ))}
+                </span>
+              </p>
             </div>
           </div>
         </div>
