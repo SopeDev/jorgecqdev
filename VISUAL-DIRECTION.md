@@ -1,6 +1,6 @@
 # Global visual direction — jorgeCQ site
 
-**Fuente de verdad** para implementación visual en `site/`. Las siguientes instrucciones del proyecto deben alinearse con esto.
+**Fuente de verdad** para implementación visual del sitio. Las siguientes instrucciones del proyecto deben alinearse con esto.
 
 This is **not** a generic minimal website.
 
@@ -34,7 +34,7 @@ Avoid:
 
 No pure `#000000` / `#FFFFFF` as default surfaces. No gradients unless explicitly justified.
 
-Tokens viven en `site/src/app/globals.css` (clase `.dark` en `<html>`).
+Tokens viven en `src/app/globals.css` (clase `.dark` en `<html>`).
 
 ---
 

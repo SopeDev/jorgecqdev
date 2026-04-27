@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createPortal } from 'react-dom'
 import { gsap } from 'gsap'
 import { cn } from '@/lib/utils'
 import { BouncyLetters } from '@/components/BouncyLetters/BouncyLetters'
@@ -20,12 +19,15 @@ const publicAsset = (path) =>
 export function Header() {
   const [navOpen, setNavOpen] = useState(false)
   const [menuVisible, setMenuVisible] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
   const panelRef = useRef(null)
   const linksRef = useRef([])
   const pathname = usePathname()
   const isHome = pathname === '/'
+  const toggleNav = () => {
+    const nextNavOpen = !navOpen
+    if (nextNavOpen) setMenuVisible(true)
+    setNavOpen(nextNavOpen)
+  }
 
   useEffect(() => {
     const panel = panelRef.current
@@ -36,7 +38,6 @@ export function Header() {
     gsap.killTweensOf(links)
 
     if (navOpen) {
-      setMenuVisible(true)
       gsap.set(panel, { scaleX: 0, scaleY: 0, transformOrigin: 'top left' })
       gsap.set(links[0], { x: -800 })
       gsap.set(links[1], { x: 800 })
@@ -116,20 +117,6 @@ export function Header() {
     }
   }, [navOpen])
 
-  useEffect(() => {
-    const onScroll = () => {
-      setIsScrolled(window.scrollY > 16)
-    }
-
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
   const fullscreenNav = (
     <div
       id="fullscreen-nav"
@@ -182,7 +169,7 @@ export function Header() {
           aria-expanded={navOpen}
           aria-controls="fullscreen-nav"
           aria-label={navOpen ? 'Cerrar menú' : 'Abrir menú'}
-          onClick={() => setNavOpen((o) => !o)}
+          onClick={toggleNav}
         >
           <span
             className={cn(
@@ -233,7 +220,7 @@ export function Header() {
           />
         </Link>
       </div>
-      {isMounted ? createPortal(fullscreenNav, document.body) : null}
+      {fullscreenNav}
     </header>
   )
 }

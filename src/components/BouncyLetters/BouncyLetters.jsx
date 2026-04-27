@@ -28,8 +28,6 @@ export function BouncyLetters({ text, className }) {
     })
   }
 
-  lettersRef.current = []
-
   return (
     <span className={className} aria-label={text}>
       {text.split('').map((char, index) => (

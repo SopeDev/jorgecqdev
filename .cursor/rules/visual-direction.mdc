@@ -3,7 +3,7 @@ description: Global visual direction for jorgeCQ site — editorial, structured,
 alwaysApply: true
 ---
 
-# Visual direction (jorgeCQ / `site/`)
+# Visual direction (jorgeCQ site)
 
 Read and follow **`VISUAL-DIRECTION.md`** at the workspace root for full detail. Summary:
 
@@ -19,7 +19,7 @@ Read and follow **`VISUAL-DIRECTION.md`** at the workspace root for full detail.
 
 ## Color (dark)
 
-- Background `#0B0B0C`, surfaces/cards `#111113`, text `#EAEAEA` / `#A1A1AA`, accent `#3B82F6` **very sparingly**, borders `rgba(255,255,255,0.08)` (see `site/src/app/globals.css`).
+- Background `#0B0B0C`, surfaces/cards `#111113`, text `#EAEAEA` / `#A1A1AA`, accent `#3B82F6` **very sparingly**, borders `rgba(255,255,255,0.08)` (see `src/app/globals.css`).
 
 ## Type
 
