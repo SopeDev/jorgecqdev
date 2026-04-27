@@ -3,6 +3,8 @@
  */
 
 export const ENFOQUE_CONTENT = {
+  /** Lead column heading (enfoque section) */
+  sectionLabel: 'Mi enfoque',
   eyebrow: 'Enfoque',
   title: 'No solo sitios. Herramientas que trabajan para ti.',
   lines: [
