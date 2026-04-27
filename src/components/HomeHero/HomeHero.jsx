@@ -25,10 +25,14 @@ export function HomeHero() {
       const paragraph = copy.querySelector('[data-hero-paragraph]')
       const actions = copy.querySelector('[data-hero-actions]')
       const steelField = section.querySelector('[data-hero-steel-field]')
+      const systemField = section.querySelector('[data-hero-system-field]')
       const scrollIndicator = section.querySelector('[data-hero-scroll-indicator]')
       const scrollIndicatorLine = section.querySelector('[data-hero-scroll-line]')
       const focusBlock = section.querySelector('[data-focus-block]')
+      const focusHeading = section.querySelector('[data-focus-heading-line]')
+      const focusTitle = section.querySelector('[data-focus-title-line]')
       const focusLines = section.querySelectorAll('[data-focus-line]')
+      const focusRevealEls = [focusHeading, focusTitle, ...focusLines].filter(Boolean)
       const titleInDelay = 0.12
       const titleInDuration = 1.2
       const titleInStagger = 0.3
@@ -41,20 +45,27 @@ export function HomeHero() {
       const heroOutEnd =
         heroOutStart + heroOutDuration + heroOutStagger * Math.max(0, titleLines.length - 1)
       const focusInStart = heroOutEnd + 0.08
-      const focusLinesStart = focusInStart + 0.04
+      const focusHeadingDuration = titleInDuration
+      const focusTitleDuration = 0.55
+      const focusNodes = { progress: 0 }
+      const focusHeadingStart = focusInStart + 0.04
+      const focusTitleStart = focusHeadingStart + focusHeadingDuration + 0.12
+      const focusLinesStart = focusTitleStart + focusTitleDuration + 0.16
 
       if (prefersReduced) {
         gsap.set(titleLines, { yPercent: 0 })
         gsap.set(paragraph, { opacity: 1 })
         gsap.set(actions, { opacity: 1 })
         gsap.set(focusBlock, { opacity: 1 })
-        gsap.set(focusLines, { yPercent: 0 })
+        gsap.set(focusRevealEls, { yPercent: 0 })
+        systemField?.setAttribute('data-node-focus-progress', '1')
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
         return
       }
 
-      gsap.set(focusLines, { yPercent: 108 })
+      gsap.set(focusRevealEls, { yPercent: 112 })
+      systemField?.setAttribute('data-node-focus-progress', '0')
 
       gsap.fromTo(
         titleLines,
@@ -162,11 +173,45 @@ export function HomeHero() {
           focusInStart
         )
         .to(
+          focusHeading,
+          {
+            yPercent: 0,
+            duration: focusHeadingDuration,
+            ease: 'power3.out',
+          },
+          focusHeadingStart
+        )
+        .to(
+          focusNodes,
+          {
+            progress: 1,
+            duration: focusHeadingDuration,
+            ease: 'power3.out',
+            onUpdate: () => {
+              systemField?.setAttribute(
+                'data-node-focus-progress',
+                focusNodes.progress.toFixed(3)
+              )
+            },
+          },
+          focusHeadingStart
+        )
+        .to(
+          focusTitle,
+          {
+            yPercent: 0,
+            duration: focusTitleDuration,
+            ease: 'power3.out',
+          },
+          focusTitleStart
+        )
+        .to(
           focusLines,
           {
             yPercent: 0,
-            stagger: 0.08,
-            ease: 'none',
+            duration: 0.5,
+            stagger: 0.1,
+            ease: 'power3.out',
           },
           focusLinesStart
         )
@@ -245,22 +290,48 @@ export function HomeHero() {
             </div>
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-end px-6">
-        <div data-focus-block className="w-full max-w-3xl text-right opacity-0" aria-label="Enfoque">
-          <p className="font-mono text-[length:var(--text-label)] font-medium uppercase tracking-[0.14em] text-muted-foreground md:text-[length:var(--text-label-md)]">
-            {ENFOQUE_CONTENT.eyebrow}
-          </p>
-          <h2 className="mt-4 ml-auto max-w-2xl text-[clamp(1.7rem,2.8vw,2.9rem)] font-semibold leading-[1.06] tracking-[-0.025em] text-foreground">
-            {ENFOQUE_CONTENT.title}
-          </h2>
-          <div className="mt-10 ml-auto max-w-2xl space-y-4 text-[clamp(1.02rem,1.1vw,1.24rem)] leading-[1.65] text-muted-foreground md:mt-12">
-            {ENFOQUE_CONTENT.lines.map((line) => (
-              <p key={line} className="overflow-hidden">
-                <span data-focus-line className="block text-pretty will-change-transform">
-                  {line}
+      <div className="pointer-events-none absolute inset-0 z-[2] flex items-center px-6">
+        <div
+          data-focus-block
+          className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 opacity-0 md:grid-cols-12 md:items-start md:gap-10"
+          aria-label="Mi enfoque"
+        >
+          <div className="md:col-span-5">
+            <h1
+              data-node-focus-target
+              className="text-[clamp(2.2rem,4.2vw,4.4rem)] font-semibold leading-[1.02] tracking-[-0.035em] text-foreground"
+            >
+              <span className="block overflow-hidden py-[0.08em]">
+                <span
+                  data-focus-heading-line
+                  className="block pb-[0.08em] will-change-transform md:whitespace-nowrap"
+                >
+                  {ENFOQUE_CONTENT.sectionLabel}
                 </span>
-              </p>
-            ))}
+              </span>
+            </h1>
+          </div>
+
+          <div className="md:col-span-7 md:text-right">
+            <h2 className="ml-auto max-w-2xl text-[clamp(1.3rem,2.1vw,2.15rem)] font-semibold leading-[1.08] tracking-[-0.025em] text-foreground">
+              <span className="block overflow-hidden py-[0.08em]">
+                <span
+                  data-focus-title-line
+                  className="block pb-[0.08em] will-change-transform"
+                >
+                  {ENFOQUE_CONTENT.title}
+                </span>
+              </span>
+            </h2>
+            <div className="mt-8 ml-auto max-w-2xl space-y-4 text-[clamp(1.02rem,1.1vw,1.24rem)] leading-[1.65] text-muted-foreground md:mt-10">
+              {ENFOQUE_CONTENT.lines.map((line) => (
+                <p key={line} className="overflow-hidden">
+                  <span data-focus-line className="block text-pretty will-change-transform">
+                    {line}
+                  </span>
+                </p>
+              ))}
+            </div>
           </div>
         </div>
       </div>

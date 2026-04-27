@@ -30,6 +30,11 @@ const MOUSE_PARALLAX_Y = 17
 const LOCAL_REACT_RADIUS_FR = 0.42
 const LOCAL_REACT_BOOST_X = 68
 const LOCAL_REACT_BOOST_Y = 56
+const FOCUS_ATTR = 'data-node-focus-progress'
+const FOCUS_TARGET_SELECTOR = '[data-node-focus-target]'
+const FOCUS_SPREAD_X = 38
+const FOCUS_SPREAD_Y = 18
+
 function initNodes(w, h) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
   return Array.from({ length: NODE_COUNT }, () => {
@@ -43,6 +48,10 @@ function initNodes(w, h) {
       phase: Math.random() * Math.PI * 2,
       pulse: 0.65 + Math.random() * 0.35,
       depth,
+      focusX: Math.random(),
+      focusY: Math.random(),
+      focusOffsetX: (Math.random() - 0.5) * FOCUS_SPREAD_X,
+      focusOffsetY: (Math.random() - 0.5) * FOCUS_SPREAD_Y,
     }
   })
 }
@@ -51,6 +60,26 @@ function dist2(ax, ay, bx, by) {
   const dx = ax - bx
   const dy = ay - by
   return dx * dx + dy * dy
+}
+
+function clamp01(value) {
+  if (value <= 0) return 0
+  if (value >= 1) return 1
+  return value
+}
+
+function getFocusTargetRect(wrap) {
+  const target = document.querySelector(FOCUS_TARGET_SELECTOR)
+  if (!target) return null
+
+  const wrapRect = wrap.getBoundingClientRect()
+  const targetRect = target.getBoundingClientRect()
+  return {
+    x: targetRect.left - wrapRect.left,
+    y: targetRect.top - wrapRect.top,
+    w: targetRect.width,
+    h: targetRect.height,
+  }
 }
 
 /**
@@ -124,6 +153,8 @@ export function HeroSystemField({ className, ...props }) {
       if (!st) return
       const { nodes, w, h } = st
       const mr = mouseRef.current
+      const focusProgress = clamp01(Number(wrap.getAttribute(FOCUS_ATTR)) || 0)
+      const focusRect = focusProgress > 0 ? getFocusTargetRect(wrap) : null
       mr.x += (mr.tx - mr.x) * MOUSE_LERP
       mr.y += (mr.ty - mr.y) * MOUSE_LERP
 
@@ -143,9 +174,26 @@ export function HeroSystemField({ className, ...props }) {
         const dist = Math.sqrt(dx * dx + dy * dy)
         const influence = Math.max(0, 1 - dist / localRadius)
         const falloff = influence * influence
+        let x = n.x + parallaxX + mr.x * LOCAL_REACT_BOOST_X * falloff
+        let y = n.y + parallaxY + mr.y * LOCAL_REACT_BOOST_Y * falloff
+
+        if (focusRect) {
+          const targetX =
+            focusRect.x +
+            focusRect.w * n.focusX +
+            n.focusOffsetX * (0.35 + n.depth * 0.65)
+          const targetY =
+            focusRect.y +
+            focusRect.h * (0.22 + n.focusY * 0.58) +
+            n.focusOffsetY * (0.35 + n.depth * 0.65)
+          const focusEase = 1 - Math.pow(1 - focusProgress, 3)
+          x += (targetX - x) * focusEase
+          y += (targetY - y) * focusEase
+        }
+
         return {
-          x: n.x + parallaxX + mr.x * LOCAL_REACT_BOOST_X * falloff,
-          y: n.y + parallaxY + mr.y * LOCAL_REACT_BOOST_Y * falloff,
+          x,
+          y,
         }
       })
 
