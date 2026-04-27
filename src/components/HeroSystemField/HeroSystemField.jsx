@@ -4,7 +4,7 @@ import { useRef, useEffect } from 'react'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { cn } from '@/lib/utils'
 
-const NODE_COUNT = 65
+const NODE_COUNT = 100
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
 /** Canvas shadowBlur for node halos (px); scaled per-node by depth. */
@@ -32,12 +32,10 @@ const LOCAL_REACT_BOOST_X = 68
 const LOCAL_REACT_BOOST_Y = 56
 const FOCUS_ATTR = 'data-node-focus-progress'
 const FOCUS_TARGET_SELECTOR = '[data-node-focus-target]'
-const NODE_RGB = { r: 255, g: 255, b: 255 }
-const FOCUS_RGB = { r: 87, g: 191, b: 190 }
 
 function initNodes(w, h) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
-  return Array.from({ length: NODE_COUNT }, (_, index) => {
+  return Array.from({ length: NODE_COUNT }, () => {
     /** 0 = back, 1 = front — drives size, brightness, and link weight. */
     const depth = Math.pow(Math.random(), 0.85)
     return {
@@ -48,7 +46,8 @@ function initNodes(w, h) {
       phase: Math.random() * Math.PI * 2,
       pulse: 0.65 + Math.random() * 0.35,
       depth,
-      focusX: NODE_COUNT === 1 ? 0.5 : index / (NODE_COUNT - 1),
+      focusX: Math.random(),
+      focusY: Math.random(),
     }
   })
 }
@@ -63,10 +62,6 @@ function clamp01(value) {
   if (value <= 0) return 0
   if (value >= 1) return 1
   return value
-}
-
-function mixChannel(from, to, progress) {
-  return Math.round(from + (to - from) * progress)
 }
 
 function getFocusTargetRect(wrap) {
@@ -156,12 +151,6 @@ export function HeroSystemField({ className, ...props }) {
       const mr = mouseRef.current
       const focusProgress = clamp01(Number(wrap.getAttribute(FOCUS_ATTR)) || 0)
       const focusRect = focusProgress > 0 ? getFocusTargetRect(wrap) : null
-      const colorMix = focusProgress
-      const color = {
-        r: mixChannel(NODE_RGB.r, FOCUS_RGB.r, colorMix),
-        g: mixChannel(NODE_RGB.g, FOCUS_RGB.g, colorMix),
-        b: mixChannel(NODE_RGB.b, FOCUS_RGB.b, colorMix),
-      }
       mr.x += (mr.tx - mr.x) * MOUSE_LERP
       mr.y += (mr.ty - mr.y) * MOUSE_LERP
 
@@ -190,7 +179,7 @@ export function HeroSystemField({ className, ...props }) {
             focusRect.w * n.focusX
           const targetY =
             focusRect.y +
-            focusRect.h * 0.5
+            focusRect.h * n.focusY
           const focusEase = focusProgress
           x += (targetX - x) * focusEase
           y += (targetY - y) * focusEase
@@ -225,7 +214,7 @@ export function HeroSystemField({ className, ...props }) {
             )
           const alpha =
             LINE_ALPHA_MAX * falloff * falloff * flicker * linkDepth
-          ctx.strokeStyle = `rgba(${color.r},${color.g},${color.b},${alpha})`
+          ctx.strokeStyle = `rgba(255,255,255,${alpha})`
           ctx.beginPath()
           ctx.moveTo(ar.x, ar.y)
           ctx.lineTo(br.x, br.y)
@@ -244,9 +233,9 @@ export function HeroSystemField({ className, ...props }) {
           (DEPTH_RADIUS_MIN_FR + (1 - DEPTH_RADIUS_MIN_FR) * n.depth)
         ctx.shadowOffsetX = 0
         ctx.shadowOffsetY = 0
-        ctx.shadowColor = `rgba(${color.r},${color.g},${color.b},${NODE_GLOW_ALPHA * breathe * intensity})`
+        ctx.shadowColor = `rgba(255,255,255,${NODE_GLOW_ALPHA * breathe * intensity})`
         ctx.shadowBlur = GLOW_BLUR * (0.5 + 0.5 * n.depth)
-        ctx.fillStyle = `rgba(${color.r},${color.g},${color.b},${NODE_ALPHA * breathe * intensity})`
+        ctx.fillStyle = `rgba(255,255,255,${NODE_ALPHA * breathe * intensity})`
         ctx.beginPath()
         ctx.arc(nr.x, nr.y, radius, 0, Math.PI * 2)
         ctx.fill()
