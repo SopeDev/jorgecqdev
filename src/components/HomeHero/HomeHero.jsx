@@ -16,6 +16,8 @@ export function HomeHero() {
   const { prefersReduced } = useMotionSafe()
 
   useLayoutEffect(() => {
+    let introRaf = 0
+    let introCheckRaf = 0
     const section = sectionRef.current
     const copy = copyRef.current
     if (!section || !copy) return
@@ -32,7 +34,7 @@ export function HomeHero() {
       const focusHeading = section.querySelector('[data-focus-heading-line]')
       const focusTitle = section.querySelector('[data-focus-title-line]')
       const focusLines = section.querySelectorAll('[data-focus-line]')
-      const focusRevealEls = [focusHeading, focusTitle, ...focusLines].filter(Boolean)
+      const focusClipRevealEls = [focusTitle, ...focusLines].filter(Boolean)
       const titleInDelay = 0.12
       const titleInDuration = 1.2
       const titleInStagger = 0.3
@@ -57,70 +59,26 @@ export function HomeHero() {
         gsap.set(paragraph, { opacity: 1 })
         gsap.set(actions, { opacity: 1 })
         gsap.set(focusBlock, { opacity: 1 })
-        gsap.set(focusRevealEls, { yPercent: 0 })
+        gsap.set(focusHeading, { opacity: 1, filter: 'blur(0px)' })
+        gsap.set(focusClipRevealEls, { yPercent: 0 })
         systemField?.setAttribute('data-node-focus-progress', '1')
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
         return
       }
 
-      gsap.set(focusRevealEls, { yPercent: 112 })
+      gsap.set(focusHeading, { opacity: 0, filter: 'blur(50px)' })
+      gsap.set(focusClipRevealEls, { yPercent: 112 })
       systemField?.setAttribute('data-node-focus-progress', '0')
-
-      gsap.fromTo(
-        titleLines,
-        { yPercent: 112 },
-        {
-          yPercent: 0,
-          duration: titleInDuration,
-          stagger: titleInStagger,
-          ease: 'power3.out',
-          delay: titleInDelay,
-        }
-      )
-      if (paragraph) {
-        gsap.fromTo(
-          paragraph,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            duration: 0.55,
-            ease: 'power2.out',
-            delay: paragraphInDelay,
-          }
-        )
-      }
-      if (scrollIndicator && scrollIndicatorLine) {
-        gsap.fromTo(
-          scrollIndicator,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            duration: 0.45,
-            ease: 'power2.out',
-            delay: indicatorInDelay,
-          }
-        )
-        gsap.fromTo(
-          scrollIndicatorLine,
-          { scaleY: 0.2, transformOrigin: 'top center' },
-          {
-            scaleY: 1,
-            duration: 0.5,
-            ease: 'power2.out',
-            delay: indicatorInDelay,
-          }
-        )
-      }
 
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: 'top top',
-          end: '+=90%',
+          end: '+=160%',
           pin: true,
           pinSpacing: true,
-          scrub: 0.6,
+          scrub: 0.9,
           anticipatePin: 1,
           invalidateOnRefresh: true,
         },
@@ -175,9 +133,10 @@ export function HomeHero() {
         .to(
           focusHeading,
           {
-            yPercent: 0,
+            opacity: 1,
+            filter: 'blur(0px)',
             duration: focusHeadingDuration,
-            ease: 'power3.out',
+            ease: 'none',
           },
           focusHeadingStart
         )
@@ -186,7 +145,7 @@ export function HomeHero() {
           {
             progress: 1,
             duration: focusHeadingDuration,
-            ease: 'power3.out',
+            ease: 'none',
             onUpdate: () => {
               systemField?.setAttribute(
                 'data-node-focus-progress',
@@ -215,9 +174,88 @@ export function HomeHero() {
           },
           focusLinesStart
         )
+
+      const atPageTop = () => window.scrollY <= 2
+      const introTl = gsap.timeline({ paused: true })
+
+      if (atPageTop()) {
+        gsap.set(titleLines, { yPercent: 112 })
+        gsap.set(paragraph, { opacity: 0 })
+        gsap.set(actions, { opacity: 0 })
+        gsap.set(scrollIndicator, { opacity: 0 })
+        gsap.set(scrollIndicatorLine, { scaleY: 0.2, transformOrigin: 'top center' })
+      } else {
+        gsap.set(titleLines, { yPercent: 0 })
+        gsap.set(paragraph, { opacity: 1 })
+        gsap.set(actions, { opacity: 1 })
+        gsap.set(scrollIndicator, { opacity: 1 })
+        gsap.set(scrollIndicatorLine, { scaleY: 1, transformOrigin: 'top center' })
+        ScrollTrigger.refresh()
+      }
+
+      introTl
+        .to(titleLines, {
+          yPercent: 0,
+          duration: titleInDuration,
+          stagger: titleInStagger,
+          ease: 'power3.out',
+          delay: titleInDelay,
+        })
+        .to(
+          paragraph,
+          {
+            opacity: 1,
+            duration: 0.55,
+            ease: 'power2.out',
+          },
+          paragraphInDelay
+        )
+        .to(
+          actions,
+          {
+            opacity: 1,
+            duration: 0.45,
+            ease: 'power2.out',
+          },
+          paragraphInDelay + 0.12
+        )
+        .to(
+          scrollIndicator,
+          {
+            opacity: 1,
+            duration: 0.45,
+            ease: 'power2.out',
+          },
+          indicatorInDelay
+        )
+        .to(
+          scrollIndicatorLine,
+          {
+            scaleY: 1,
+            duration: 0.5,
+            ease: 'power2.out',
+          },
+          indicatorInDelay
+        )
+
+      introRaf = window.requestAnimationFrame(() => {
+        introCheckRaf = window.requestAnimationFrame(() => {
+          if (atPageTop()) {
+            introTl.play(0)
+            return
+          }
+
+          introTl.progress(1).kill()
+          ScrollTrigger.refresh()
+        })
+      })
     }, section)
 
-    return () => ctx.revert()
+    return () => {
+      window.cancelAnimationFrame(introRaf)
+      window.cancelAnimationFrame(introCheckRaf)
+      ctx.revert()
+    }
   }, [prefersReduced])
 
   return (
@@ -290,30 +328,32 @@ export function HomeHero() {
             </div>
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-0 z-[2] flex items-center px-6">
+      <div className="pointer-events-none absolute inset-0 z-[2] flex items-center">
         <div
           data-focus-block
-          className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 opacity-0 md:grid-cols-12 md:items-start md:gap-10"
+          className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-8 px-6 opacity-0 md:grid-cols-12 md:items-start md:gap-10"
           aria-label="Mi enfoque"
         >
           <div className="md:col-span-5">
-            <h1
-              data-node-focus-target
-              className="text-[clamp(2.2rem,4.2vw,4.4rem)] font-semibold leading-[1.02] tracking-[-0.035em] text-foreground"
-            >
-              <span className="block overflow-hidden py-[0.08em]">
+            <div className="inline-block w-fit">
+              <h1 className="text-[clamp(2.2rem,4.2vw,4.4rem)] font-semibold leading-[1.02] tracking-[-0.035em] text-foreground">
                 <span
                   data-focus-heading-line
-                  className="block pb-[0.08em] will-change-transform md:whitespace-nowrap"
+                  className="block pb-[0.08em] will-change-[opacity,filter] md:whitespace-nowrap"
                 >
                   {ENFOQUE_CONTENT.sectionLabel}
                 </span>
-              </span>
-            </h1>
+              </h1>
+              <span
+                data-node-focus-target
+                className="mt-1 block h-px w-full opacity-0"
+                aria-hidden
+              />
+            </div>
           </div>
 
           <div className="md:col-span-7 md:text-right">
-            <h2 className="ml-auto max-w-2xl text-[clamp(1.3rem,2.1vw,2.15rem)] font-semibold leading-[1.08] tracking-[-0.025em] text-foreground">
+            <h2 className="ml-auto max-w-2xl text-[clamp(1.18rem,1.75vw,1.85rem)] font-semibold leading-[1.1] tracking-[-0.025em] text-foreground">
               <span className="block overflow-hidden py-[0.08em]">
                 <span
                   data-focus-title-line

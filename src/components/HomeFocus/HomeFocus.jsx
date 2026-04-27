@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { SectionWrapper } from '@/components/SectionWrapper/SectionWrapper'
@@ -13,7 +13,7 @@ export function HomeFocus() {
   const sectionRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const section = sectionRef.current
     if (!section) return
 
@@ -32,9 +32,9 @@ export function HomeFocus() {
 
       const scrollTrigger = {
         trigger: section,
-        start: 'top 72%',
-        end: 'top 30%',
-        scrub: 0.55,
+        start: 'top 82%',
+        end: 'top 18%',
+        scrub: 0.9,
       }
 
       /**
@@ -108,7 +108,7 @@ export function HomeFocus() {
           </div>
           <div className="lg:col-span-7">
             <h3
-              className="max-w-3xl text-[clamp(1.2rem,1.85vw,1.7rem)] font-semibold leading-[1.12] tracking-[-0.02em] text-foreground"
+              className="max-w-3xl text-[clamp(1.1rem,1.55vw,1.48rem)] font-semibold leading-[1.14] tracking-[-0.02em] text-foreground"
             >
               <span className="block overflow-hidden py-[0.08em]">
                 <span

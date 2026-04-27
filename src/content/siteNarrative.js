@@ -8,7 +8,7 @@ export const ENFOQUE_CONTENT = {
   title: 'No solo sitios. Herramientas que trabajan para ti.',
   lines: [
     'No se trata solo de tener presencia en internet. Se trata de construir herramientas que realmente aporten valor a tu negocio.',
-    'Cada proyecto lo abordo con una vision clara: que lo que construyamos funcione hoy, pero tambien tenga espacio para crecer.',
+    'Cada proyecto lo abordo con una visión clara: que lo que construyamos funcione hoy, pero también tenga espacio para crecer.',
   ],
 }
 

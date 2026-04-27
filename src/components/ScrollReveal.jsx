@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, useId } from 'react'
+import { useRef, useLayoutEffect, useId } from 'react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
@@ -13,7 +13,7 @@ export function ScrollReveal({ children, className, as: Component = 'div' }) {
   const id = useId().replace(/:/g, '')
   const { prefersReduced } = useMotionSafe()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
 
