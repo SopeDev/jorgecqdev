@@ -415,7 +415,9 @@ export function HomeHero() {
                   data-focus-title-line
                   className="block pb-[0.08em] will-change-transform"
                 >
-                  {ENFOQUE_CONTENT.title}
+                  {ENFOQUE_CONTENT.titleLead}
+                  <span className="text-primary">{ENFOQUE_CONTENT.titleAccent}</span>
+                  {'.'}
                 </span>
               </span>
             </h2>
