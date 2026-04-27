@@ -18,9 +18,28 @@ export function HomeHero() {
   useLayoutEffect(() => {
     let introRaf = 0
     let introCheckRaf = 0
+    let bodyScrollLocked = false
+    let introSettled = false
+    let onLateScrollCheck = () => {}
+    let lateCheckTimeout = 0
     const section = sectionRef.current
     const copy = copyRef.current
     if (!section || !copy) return
+
+    const applyScrollLock = () => {
+      if (bodyScrollLocked) return
+      bodyScrollLocked = true
+      document.documentElement.style.overflow = 'hidden'
+      document.body.style.overflow = 'hidden'
+    }
+
+    const releaseScrollLock = () => {
+      if (!bodyScrollLocked) return
+      bodyScrollLocked = false
+      document.documentElement.style.overflow = ''
+      document.body.style.overflow = ''
+      ScrollTrigger.refresh()
+    }
 
     const ctx = gsap.context(() => {
       const titleLines = copy.querySelectorAll('[data-hero-title-line]')
@@ -208,7 +227,31 @@ export function HomeHero() {
         )
 
       const atPageTop = () => window.scrollY <= 2
-      const introTl = gsap.timeline({ paused: true })
+
+      const setIntroToFinishedState = () => {
+        gsap.set(titleLines, { yPercent: 0 })
+        gsap.set(paragraph, { opacity: 1 })
+        gsap.set(actions, { opacity: 1 })
+        gsap.set(scrollIndicator, { opacity: 1 })
+        gsap.set(scrollIndicatorLine, { scaleY: 1, transformOrigin: 'top center' })
+      }
+
+      const introTl = gsap.timeline({
+        paused: true,
+        onComplete: () => {
+          introSettled = true
+          releaseScrollLock()
+        },
+      })
+
+      const bypassIntro = () => {
+        if (introSettled) return
+        introSettled = true
+        releaseScrollLock()
+        introTl.progress(1).kill()
+        setIntroToFinishedState()
+        ScrollTrigger.refresh()
+      }
 
       if (atPageTop()) {
         gsap.set(titleLines, { yPercent: 112 })
@@ -217,11 +260,7 @@ export function HomeHero() {
         gsap.set(scrollIndicator, { opacity: 0 })
         gsap.set(scrollIndicatorLine, { scaleY: 0.2, transformOrigin: 'top center' })
       } else {
-        gsap.set(titleLines, { yPercent: 0 })
-        gsap.set(paragraph, { opacity: 1 })
-        gsap.set(actions, { opacity: 1 })
-        gsap.set(scrollIndicator, { opacity: 1 })
-        gsap.set(scrollIndicatorLine, { scaleY: 1, transformOrigin: 'top center' })
+        setIntroToFinishedState()
         ScrollTrigger.refresh()
       }
 
@@ -270,22 +309,38 @@ export function HomeHero() {
           indicatorInDelay
         )
 
+      onLateScrollCheck = () => {
+        if (!atPageTop()) {
+          bypassIntro()
+        }
+      }
+      window.addEventListener('load', onLateScrollCheck, { once: true })
+      requestAnimationFrame(() => {
+        lateCheckTimeout = window.setTimeout(onLateScrollCheck, 0)
+      })
+
       introRaf = window.requestAnimationFrame(() => {
         introCheckRaf = window.requestAnimationFrame(() => {
-          if (atPageTop()) {
-            introTl.play(0)
+          if (!atPageTop()) {
+            bypassIntro()
+            return
+          }
+          if (introSettled) {
             return
           }
 
-          introTl.progress(1).kill()
-          ScrollTrigger.refresh()
+          applyScrollLock()
+          introTl.play(0)
         })
       })
     }, section)
 
     return () => {
+      window.removeEventListener('load', onLateScrollCheck)
+      window.clearTimeout(lateCheckTimeout)
       window.cancelAnimationFrame(introRaf)
       window.cancelAnimationFrame(introCheckRaf)
+      releaseScrollLock()
       ctx.revert()
     }
   }, [prefersReduced])
