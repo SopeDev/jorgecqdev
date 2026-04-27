@@ -7,9 +7,9 @@ import { cn } from '@/lib/utils'
 const NODE_COUNT = 100
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
-/** Canvas shadowBlur for node halos (px); scaled per-node by depth. */
-const GLOW_BLUR = 26
-/** Peak white alpha in shadowColor (scaled by `breathe`); scaled per-node by depth. */
+/** Soft outer halo: circle radius = NODE_RADIUS * this (avoids per-node `shadowBlur`, which is costly). */
+const GLOW_OUTER_R_FR = 2.1
+/** Peak white alpha in outer halo (scaled by `breathe`); scaled per-node by depth. */
 const NODE_GLOW_ALPHA = 0.42
 /** Base dot radius (px); depth scales between DEPTH_RADIUS_MIN_FR and 1. */
 const NODE_RADIUS = 1.65
@@ -64,8 +64,7 @@ function clamp01(value) {
   return value
 }
 
-function getFocusTargetRect(wrap) {
-  const target = document.querySelector(FOCUS_TARGET_SELECTOR)
+function getFocusTargetRect(wrap, target) {
   if (!target) return null
 
   const wrapRect = wrap.getBoundingClientRect()
@@ -99,6 +98,8 @@ export function HeroSystemField({ className, ...props }) {
     const ctx = canvas.getContext('2d', { alpha: true })
     if (!ctx) return
 
+    let focusTargetEl = null
+
     const onMove = (e) => {
       mouseRef.current.tx = (e.clientX / window.innerWidth - 0.5) * 1
       mouseRef.current.ty = (e.clientY / window.innerHeight - 0.5) * 1
@@ -115,9 +116,20 @@ export function HeroSystemField({ className, ...props }) {
       canvas.style.height = `${h}px`
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
+      if (!focusTargetEl) {
+        focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
+      }
+
       const prev = stateRef.current
       if (!prev) {
-        stateRef.current = { nodes: initNodes(w, h), w, h }
+        stateRef.current = {
+          nodes: initNodes(w, h),
+          w,
+          h,
+          rx: new Float32Array(NODE_COUNT),
+          ry: new Float32Array(NODE_COUNT),
+          linkBuckets: null,
+        }
       } else {
         const sx = w / prev.w
         const sy = h / prev.h
@@ -127,6 +139,12 @@ export function HeroSystemField({ className, ...props }) {
         }
         prev.w = w
         prev.h = h
+        if (prev.rx.length !== prev.nodes.length) {
+          prev.rx = new Float32Array(prev.nodes.length)
+          prev.ry = new Float32Array(prev.nodes.length)
+        }
+        prev.linkBuckets = null
+        prev.linkBKey = undefined
       }
     }
 
@@ -147,10 +165,22 @@ export function HeroSystemField({ className, ...props }) {
     const drawFrame = (timeMs) => {
       const st = stateRef.current
       if (!st) return
+      if (!st.rx || st.rx.length !== st.nodes.length) {
+        st.rx = new Float32Array(st.nodes.length)
+        st.ry = new Float32Array(st.nodes.length)
+        st.linkBuckets = null
+        st.linkBKey = undefined
+      }
       const { nodes, w, h } = st
       const mr = mouseRef.current
       const focusProgress = clamp01(Number(wrap.getAttribute(FOCUS_ATTR)) || 0)
-      const focusRect = focusProgress > 0 ? getFocusTargetRect(wrap) : null
+      if (focusProgress > 0 && !focusTargetEl) {
+        focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
+      }
+      const focusRect =
+        focusProgress > 0
+          ? getFocusTargetRect(wrap, focusTargetEl)
+          : null
       mr.x += (mr.tx - mr.x) * MOUSE_LERP
       mr.y += (mr.ty - mr.y) * MOUSE_LERP
 
@@ -163,8 +193,23 @@ export function HeroSystemField({ className, ...props }) {
       const t = timeMs * 0.001
       const maxD = Math.min(w, h) * 0.25
       const maxD2 = maxD * maxD
+      const cellSize = maxD * 0.5
+      const ncx = Math.max(1, Math.ceil(w / cellSize) + 1)
+      const ncy = Math.max(1, Math.ceil(h / cellSize) + 1)
+      const nCells = ncx * ncy
+      const bKey = Math.round(w * 10) * 1e5 + Math.round(h * 10)
+      if (st.linkBKey !== bKey) {
+        st.linkBuckets = Array.from({ length: nCells }, () => [])
+        st.linkNCells = nCells
+        st.linkBKey = bKey
+      } else {
+        for (let b = 0; b < st.linkNCells; b++) st.linkBuckets[b].length = 0
+      }
 
-      const rendered = nodes.map((n) => {
+      const rx = st.rx
+      const ry = st.ry
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i]
         const dx = n.x - mouseX
         const dy = n.y - mouseY
         const dist = Math.sqrt(dx * dx + dy * dy)
@@ -174,22 +219,25 @@ export function HeroSystemField({ className, ...props }) {
         let y = n.y + parallaxY + mr.y * LOCAL_REACT_BOOST_Y * falloff
 
         if (focusRect) {
-          const targetX =
-            focusRect.x +
-            focusRect.w * n.focusX
-          const targetY =
-            focusRect.y +
-            focusRect.h * n.focusY
+          const targetX = focusRect.x + focusRect.w * n.focusX
+          const targetY = focusRect.y + focusRect.h * n.focusY
           const focusEase = focusProgress
           x += (targetX - x) * focusEase
           y += (targetY - y) * focusEase
         }
 
-        return {
-          x,
-          y,
-        }
-      })
+        rx[i] = x
+        ry[i] = y
+        const ci = Math.min(
+          ncx - 1,
+          Math.max(0, (x / cellSize) | 0)
+        )
+        const cj = Math.min(
+          ncy - 1,
+          Math.max(0, (y / cellSize) | 0)
+        )
+        st.linkBuckets[cj * ncx + ci].push(i)
+      }
 
       ctx.clearRect(0, 0, w, h)
 
@@ -197,49 +245,75 @@ export function HeroSystemField({ className, ...props }) {
       ctx.lineCap = 'round'
       for (let i = 0; i < nodes.length; i++) {
         const a = nodes[i]
-        const ar = rendered[i]
-        for (let j = i + 1; j < nodes.length; j++) {
-          const b = nodes[j]
-          const br = rendered[j]
-          const d2 = dist2(ar.x, ar.y, br.x, br.y)
-          if (d2 >= maxD2) continue
-          const d = Math.sqrt(d2)
-          const nudge = 0.5 + 0.5 * Math.sin(t * 0.55 + a.phase * 0.3 + b.phase * 0.7)
-                   const flicker = 0.78 + 0.22 * nudge * a.pulse * b.pulse
-          const falloff = 1 - d / maxD
-          const linkDepth =
-            Math.sqrt(
-              (DEPTH_LINK_MIN_FR + (1 - DEPTH_LINK_MIN_FR) * a.depth) *
-                (DEPTH_LINK_MIN_FR + (1 - DEPTH_LINK_MIN_FR) * b.depth)
-            )
-          const alpha =
-            LINE_ALPHA_MAX * falloff * falloff * flicker * linkDepth
-          ctx.strokeStyle = `rgba(255,255,255,${alpha})`
-          ctx.beginPath()
-          ctx.moveTo(ar.x, ar.y)
-          ctx.lineTo(br.x, br.y)
-          ctx.stroke()
+        const arx = rx[i]
+        const ary = ry[i]
+        const ci = Math.min(
+          ncx - 1,
+          Math.max(0, (arx / cellSize) | 0)
+        )
+        const cj = Math.min(
+          ncy - 1,
+          Math.max(0, (ary / cellSize) | 0)
+        )
+        for (let ocx = -2; ocx <= 2; ocx++) {
+          for (let ocy = -2; ocy <= 2; ocy++) {
+            const nci = ci + ocx
+            const ncj = cj + ocy
+            if (nci < 0 || ncj < 0 || nci >= ncx || ncj >= ncy) continue
+            const list = st.linkBuckets[ncj * ncx + nci]
+            for (let k = 0; k < list.length; k++) {
+              const j = list[k]
+              if (j <= i) continue
+              const b = nodes[j]
+              const brx = rx[j]
+              const bry = ry[j]
+              const d2 = dist2(arx, ary, brx, bry)
+              if (d2 >= maxD2) continue
+              const d = Math.sqrt(d2)
+              const nudge =
+                0.5 +
+                0.5 * Math.sin(t * 0.55 + a.phase * 0.3 + b.phase * 0.7)
+              const flicker = 0.78 + 0.22 * nudge * a.pulse * b.pulse
+              const linkFall = 1 - d / maxD
+              const linkDepth =
+                Math.sqrt(
+                  (DEPTH_LINK_MIN_FR + (1 - DEPTH_LINK_MIN_FR) * a.depth) *
+                    (DEPTH_LINK_MIN_FR + (1 - DEPTH_LINK_MIN_FR) * b.depth)
+                )
+              const alpha =
+                LINE_ALPHA_MAX * linkFall * linkFall * flicker * linkDepth
+              ctx.strokeStyle = `rgba(255,255,255,${alpha})`
+              ctx.beginPath()
+              ctx.moveTo(arx, ary)
+              ctx.lineTo(brx, bry)
+              ctx.stroke()
+            }
+          }
         }
       }
 
       for (let i = 0; i < nodes.length; i++) {
         const n = nodes[i]
-        const nr = rendered[i]
+        const nx = rx[i]
+        const ny = ry[i]
         const breathe = 0.88 + 0.12 * Math.sin(t * 0.9 + n.phase)
         const intensity =
           DEPTH_INTENSITY_MIN_FR + (1 - DEPTH_INTENSITY_MIN_FR) * n.depth
         const radius =
           NODE_RADIUS *
           (DEPTH_RADIUS_MIN_FR + (1 - DEPTH_RADIUS_MIN_FR) * n.depth)
-        ctx.shadowOffsetX = 0
-        ctx.shadowOffsetY = 0
-        ctx.shadowColor = `rgba(255,255,255,${NODE_GLOW_ALPHA * breathe * intensity})`
-        ctx.shadowBlur = GLOW_BLUR * (0.5 + 0.5 * n.depth)
-        ctx.fillStyle = `rgba(255,255,255,${NODE_ALPHA * breathe * intensity})`
+        const depthBlur = 0.5 + 0.5 * n.depth
+        const outerR = radius * (GLOW_OUTER_R_FR * 0.85 + 0.15 * depthBlur)
+        ctx.fillStyle = '#fff'
+        ctx.globalAlpha = NODE_GLOW_ALPHA * breathe * intensity
         ctx.beginPath()
-        ctx.arc(nr.x, nr.y, radius, 0, Math.PI * 2)
+        ctx.arc(nx, ny, outerR, 0, Math.PI * 2)
         ctx.fill()
-        ctx.shadowBlur = 0
+        ctx.globalAlpha = NODE_ALPHA * breathe * intensity
+        ctx.beginPath()
+        ctx.arc(nx, ny, radius, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.globalAlpha = 1
       }
 
       if (!prefersReduced) {

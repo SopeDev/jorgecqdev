@@ -84,6 +84,8 @@ export function HomeHero() {
       const focusHoldStart = focusLinesEndTime + 0.24
       const focusHoldDuration = 0.9
 
+      let lastFocusAttr = '0'
+
       if (prefersReduced) {
         gsap.set(titleLines, { yPercent: 0 })
         gsap.set(paragraph, { opacity: 1 })
@@ -92,6 +94,7 @@ export function HomeHero() {
         gsap.set(focusHeading, { opacity: 1, filter: 'blur(0px)' })
         gsap.set(focusClipRevealEls, { yPercent: 0 })
         systemField?.setAttribute('data-node-focus-progress', '1')
+        lastFocusAttr = '1'
         gsap.set(systemField, { opacity: 0, filter: 'blur(14px)' })
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
@@ -179,10 +182,10 @@ export function HomeHero() {
             duration: focusHeadingDuration,
             ease: 'none',
             onUpdate: () => {
-              systemField?.setAttribute(
-                'data-node-focus-progress',
-                focusNodes.progress.toFixed(3)
-              )
+              const v = focusNodes.progress.toFixed(2)
+              if (v === lastFocusAttr) return
+              lastFocusAttr = v
+              systemField?.setAttribute('data-node-focus-progress', v)
             },
           },
           focusHeadingStart
