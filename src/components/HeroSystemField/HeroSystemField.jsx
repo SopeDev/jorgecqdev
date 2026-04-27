@@ -31,8 +31,8 @@ const MOUSE_PARALLAX_Y = 17
 const LOCAL_REACT_RADIUS_FR = 0.42
 const LOCAL_REACT_BOOST_X = 68
 const LOCAL_REACT_BOOST_Y = 56
-const FOCUS_ATTR = 'data-node-focus-progress'
 const FOCUS_TARGET_SELECTOR = '[data-node-focus-target]'
+const FOCUS_PROGRESS_PROP = '__nodeFocusProgress'
 
 function initNodes(w, h) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
@@ -173,9 +173,7 @@ function NodeLayer({ focusLayer = false }) {
       }
       const { nodes, w, h } = st
       const mr = mouseRef.current
-      const focusProgress = focusLayer
-        ? clamp01(Number(wrap.getAttribute(FOCUS_ATTR)) || 0)
-        : 0
+      const focusProgress = focusLayer ? clamp01(wrap[FOCUS_PROGRESS_PROP] || 0) : 0
       if (focusProgress > 0 && !focusTargetEl) {
         focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
       }
@@ -390,7 +388,10 @@ function NodeLayer({ focusLayer = false }) {
     <canvas
       ref={canvasRef}
       data-hero-focus-node-layer={focusLayer ? '' : undefined}
-      className="absolute inset-0 h-full w-full opacity-[0.6]"
+      className={cn(
+        'absolute inset-0 h-full w-full opacity-[0.6] [contain:paint]',
+        focusLayer && 'will-change-[opacity,filter]'
+      )}
     />
   )
 }
@@ -398,7 +399,10 @@ function NodeLayer({ focusLayer = false }) {
 export function HeroSystemField({ className, ...props }) {
   return (
     <div
-      className={cn('pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10', className)}
+      className={cn(
+        'pointer-events-none absolute inset-x-0 -top-px bottom-0 -z-10 [contain:paint]',
+        className
+      )}
       {...props}
       aria-hidden
     >

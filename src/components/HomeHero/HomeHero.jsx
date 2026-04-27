@@ -62,10 +62,10 @@ export function HomeHero() {
         titleInDelay + titleInDuration + titleInStagger * Math.max(0, titleLines.length - 1) + 0.08
       const indicatorInDelay = paragraphInDelay + 0.7
       /**
-       * Pinned scroll = 3.25 * viewport. Timeline units map to viewport chunks:
-       * .9 hero out, .9 enfoque label + canvas, 1.2 h2 + paragraph, .25 final hold.
+       * Pinned scroll = 3.15 * viewport. Timeline units map to viewport chunks:
+       * .9 hero out, .9 enfoque label + canvas, 1.2 h2 + paragraph, .15 final hold.
        */
-      const TIMELINE_UNITS = 13
+      const TIMELINE_UNITS = 12.6
       const SEG_HERO = 3.6
       const SEG_ENF = 3.6
       const SEG_BODY = 4.8
@@ -82,7 +82,7 @@ export function HomeHero() {
       const focusNodesFadeDuration = focusHeadingDuration * 0.58
       const focusTitleStart = T_BODY
       const focusTitleDuration = 0.8
-      const focusTitleStagger = 0.38
+      const focusTitleStagger = 0.58
       const focusLinesStart = focusTitleStart + focusTitleDuration + focusTitleStagger + 0.28
       const focusLinesDuration = 1.1
       const focusHoldStart = T_HOLD
@@ -91,6 +91,10 @@ export function HomeHero() {
       const focusHold = { progress: 0 }
 
       let lastFocusAttr = '0'
+      const setNodeFocusProgress = (value) => {
+        if (!systemField) return
+        systemField.__nodeFocusProgress = value
+      }
 
       if (prefersReduced) {
         gsap.set(titleLines, { yPercent: 0 })
@@ -100,7 +104,7 @@ export function HomeHero() {
         gsap.set(focusHeading, { opacity: 1, filter: 'blur(0px)' })
         gsap.set(focusClipRevealEls, { yPercent: 0 })
         gsap.set(focusLines, { opacity: 1 })
-        systemField?.setAttribute('data-node-focus-progress', '1')
+        setNodeFocusProgress(1)
         lastFocusAttr = '1'
         gsap.set(focusNodeLayer, { opacity: 0, filter: 'blur(14px)' })
         gsap.set(scrollIndicator, { opacity: 1 })
@@ -111,14 +115,14 @@ export function HomeHero() {
       gsap.set(focusHeading, { opacity: 0, filter: 'blur(50px)' })
       gsap.set(focusClipRevealEls, { yPercent: 112 })
       gsap.set(focusLines, { opacity: 0, yPercent: 0 })
-      systemField?.setAttribute('data-node-focus-progress', '0')
+      setNodeFocusProgress(0)
       gsap.set(focusNodeLayer, { opacity: 1, filter: 'blur(0px)' })
 
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: 'top top',
-          end: () => `+=${window.innerHeight * 3.25}`,
+          end: () => `+=${window.innerHeight * 3.15}`,
           pin: true,
           pinSpacing: true,
           scrub: 0.9,
@@ -133,6 +137,7 @@ export function HomeHero() {
           {
             yPercent: -112,
             duration: heroOutDuration,
+            force3D: true,
             ease: 'none',
           },
           heroOutStart
@@ -142,6 +147,7 @@ export function HomeHero() {
           {
             yPercent: -112,
             duration: heroOutSecondLineDuration,
+            force3D: true,
             ease: 'none',
           },
           heroOutStart + heroOutStagger
@@ -211,7 +217,7 @@ export function HomeHero() {
               const v = focusNodes.progress.toFixed(2)
               if (v === lastFocusAttr) return
               lastFocusAttr = v
-              systemField?.setAttribute('data-node-focus-progress', v)
+              setNodeFocusProgress(Number(v))
             },
           },
           focusHeadingStart
@@ -231,6 +237,7 @@ export function HomeHero() {
           {
             yPercent: 0,
             duration: focusTitleDuration,
+            force3D: true,
             stagger: focusTitleStagger,
             ease: 'none',
           },
