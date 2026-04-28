@@ -158,9 +158,7 @@ export function HomeHero() {
         if (showcaseLegend) showcaseLegend.textContent = `1/${SHOWCASE_SLIDE_COUNT}`
         for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
           const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-          const actions = section.querySelector(`[data-showcase-actions="${i}"]`)
           if (slide) gsap.set(slide, { opacity: i === 0 ? 1 : 0 })
-          if (actions) gsap.set(actions, { opacity: i === 0 ? 1 : 0 })
         }
         return
       }
@@ -189,9 +187,7 @@ export function HomeHero() {
       }
       for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
         const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-        const actions = section.querySelector(`[data-showcase-actions="${i}"]`)
         if (slide) gsap.set(slide, { opacity: 0 })
-        if (actions) gsap.set(actions, { opacity: 0 })
       }
 
       const heroScrollTl = gsap.timeline({
@@ -435,7 +431,6 @@ export function HomeHero() {
 
       for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
         const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-        const actions = section.querySelector(`[data-showcase-actions="${i}"]`)
         if (!slide) continue
         const segEnd = projectsPhaseStart + (i + 1) * PER_SHOWCASE_SLIDE
         const fadeOutStart = segEnd - SHOWCASE_CROSS
@@ -461,31 +456,6 @@ export function HomeHero() {
             { opacity: 0, duration: SHOWCASE_CROSS, ease: 'none' },
             fadeOutStart
           )
-        }
-        if (actions) {
-          if (i === 0) {
-            heroScrollTl.fromTo(
-              actions,
-              { opacity: 0 },
-              { opacity: 1, duration: SHOWCASE_CROSS, ease: 'none' },
-              projectsPhaseStart
-            )
-          } else {
-            const fadeInStart = projectsPhaseStart + i * PER_SHOWCASE_SLIDE - SHOWCASE_CROSS
-            heroScrollTl.fromTo(
-              actions,
-              { opacity: 0 },
-              { opacity: 1, duration: SHOWCASE_CROSS, ease: 'none' },
-              fadeInStart
-            )
-          }
-          if (i < SHOWCASE_SLIDE_COUNT - 1) {
-            heroScrollTl.to(
-              actions,
-              { opacity: 0, duration: SHOWCASE_CROSS, ease: 'none' },
-              fadeOutStart
-            )
-          }
         }
       }
 
