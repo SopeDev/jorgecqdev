@@ -131,7 +131,7 @@ export function Header() {
     >
       <div
         ref={panelRef}
-        className="absolute left-0 top-0 z-[1] h-screen w-screen origin-top-left scale-0 overflow-hidden bg-background will-change-transform"
+        className="absolute left-0 top-0 z-[1] h-screen w-screen origin-top-left scale-0 overflow-hidden bg-background/80 backdrop-blur-md will-change-transform"
       />
       <nav
         className="relative z-[2] flex h-full w-full flex-col items-center justify-center gap-3 px-6 text-center"
