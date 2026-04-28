@@ -28,7 +28,7 @@ export function HomeFrameShowcase() {
             <div
               key={project.slug}
               data-showcase-slide={index}
-              className="pointer-events-none absolute inset-0 opacity-0 will-change-[clip-path]"
+              className="pointer-events-none absolute inset-0 opacity-0 will-change-[clip-path,transform]"
             >
               <p
                 className="pointer-events-none absolute left-5 top-5 z-30 max-w-[min(90%,28rem)] text-left text-[clamp(0.95rem,2vw,1.35rem)] font-semibold leading-tight tracking-[-0.02em] text-foreground drop-shadow-[0_1px_20px_rgba(0,0,0,0.5)] select-none"

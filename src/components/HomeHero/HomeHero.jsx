@@ -131,6 +131,7 @@ export function HomeHero() {
       const SHOWCASE_WIPE_DURATION = Math.min(PER_SHOWCASE_SLIDE * 0.22, 0.9)
       const SHOWCASE_CLIP_VISIBLE = 'inset(0% 0% 0% 0%)'
       const SHOWCASE_CLIP_HIDDEN_RIGHT = 'inset(0% 0% 0% 100%)'
+      const SHOWCASE_CARD_OFFSET_X = 10
       const projectsPhaseDuration = SHOWCASE_SLIDE_COUNT * PER_SHOWCASE_SLIDE
       const TIMELINE_UNITS = projectsPhaseStart + projectsPhaseDuration
       const focusNodes = { progress: 0 }
@@ -179,6 +180,7 @@ export function HomeHero() {
             gsap.set(slide, {
               opacity: 1,
               zIndex: i + 1,
+              xPercent: 0,
               clipPath: i === 0 ? SHOWCASE_CLIP_VISIBLE : SHOWCASE_CLIP_HIDDEN_RIGHT,
             })
           }
@@ -214,6 +216,7 @@ export function HomeHero() {
           gsap.set(slide, {
             opacity: 1,
             zIndex: i + 1,
+            xPercent: SHOWCASE_CARD_OFFSET_X,
             clipPath: SHOWCASE_CLIP_HIDDEN_RIGHT,
           })
         }
@@ -228,8 +231,8 @@ export function HomeHero() {
           pin: true,
           pinType: 'fixed',
           pinSpacing: true,
-          /** `true` = scroll maps 1:1 to timeline (numeric scrub lags behind scroll). */
-          scrub: true,
+          /** Small scrub smoothing keeps scroll-linked motion from feeling mechanically 1:1. */
+          scrub: 0.45,
           anticipatePin: 1,
           invalidateOnRefresh: true,
           markers: false,
@@ -479,8 +482,12 @@ export function HomeHero() {
             : projectsPhaseStart + i * PER_SHOWCASE_SLIDE - SHOWCASE_WIPE_DURATION
         heroScrollTl.fromTo(
           slide,
-          { clipPath: SHOWCASE_CLIP_HIDDEN_RIGHT },
           {
+            xPercent: SHOWCASE_CARD_OFFSET_X,
+            clipPath: SHOWCASE_CLIP_HIDDEN_RIGHT,
+          },
+          {
+            xPercent: 0,
             clipPath: SHOWCASE_CLIP_VISIBLE,
             duration: SHOWCASE_WIPE_DURATION,
             ease: 'none',
