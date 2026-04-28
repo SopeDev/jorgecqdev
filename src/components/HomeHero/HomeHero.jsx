@@ -86,49 +86,47 @@ export function HomeHero() {
         titleInDelay + titleInDuration + titleInStagger * Math.max(0, titleLines.length - 1) + 0.08
       const indicatorInDelay = paragraphInDelay + 0.7
       /**
-       * Timeline units: 4 per 1vh of pin scroll. Phases: hero out, enfoque label +
-       * canvas, h2 + paragraphs (no dead gap), then 1vh background nodes scatter.
+       * Timeline units: 4 per 100lvh of pin scroll. Example: 1 unit = 25lvh.
        */
       const UNITS_PER_VH = 4
-      const SEG_HERO = 3.6
-      const SEG_ENF = 3.6
+      const SEG_HERO = 4
+      const SEG_ENF = 4
       const T_ENFO = SEG_HERO
       const T_BODY = SEG_HERO + SEG_ENF
       const heroOutStart = 0.1
-      const heroOutDuration = 2.4
-      const heroOutSecondLineDuration = 3
-      const heroOutStagger = 0.5
+      const heroOutDuration = T_ENFO - heroOutStart
+      const heroOutSecondLineDuration = T_ENFO - heroOutStart
+      const heroOutStagger = 0
       const focusHeadingStart = T_ENFO
-      const focusHeadingDuration = 3
+      const focusHeadingDuration = 4
       const focusNodesFadeStart = focusHeadingStart + focusHeadingDuration * 0.5
       const focusNodesFadeDuration = focusHeadingDuration * 0.58
       const focusTitleStart = T_BODY
-      const focusTitleDuration = 0.8
-      const focusTitleStagger = 0.58
-      const focusLinesStart = focusTitleStart + focusTitleDuration + focusTitleStagger + 0.28
-      const focusLinesDuration = 1.1
+      const focusTitleDuration = 1.2
+      const focusTitleStagger = 0.8
+      const focusLinesStart = 10
+      const focusLinesDuration = 2
       const enfoqueSteelInDuration =
         focusLinesStart + focusLinesDuration - focusTitleStart
-      /** Start scatter the frame Enfoque copy finishes (same as paragraph opacity end). */
+      /** Start scatter after Enfoque copy finishes. */
       const paragraphRevealEnd = focusLinesStart + focusLinesDuration
       const scatterPhaseStart = paragraphRevealEnd
-      const scatterPhaseDuration = UNITS_PER_VH
-      /** Enfoque copy + steel: opacity 40% → 80% along scatter scrub. */
-      const enfoqueFadeOutStart = scatterPhaseStart + scatterPhaseDuration * 0.4
-      const enfoqueFadeOutDuration = scatterPhaseDuration * 0.4
-      /** White edge frame: 60% → 100% of scatter (after Enfoque fade begins). */
-      const framePhaseStart = scatterPhaseStart + scatterPhaseDuration * 0.6
-      const framePhaseDuration = scatterPhaseDuration * 0.4
+      const scatterPhaseDuration = 6
+      const enfoqueFadeOutStart = 13
+      const enfoqueFadeOutDuration = 2
+      const framePhaseStart = 15
+      const framePhaseDuration = 3
       /**
        * Showcase: scroll math is NOT “vh × UNITS_PER_VH” — that blew up slide length by 100×.
        * Actual pin mapping: pixels_scrubbed ≈ stable hero height × (timeline_units / UNITS_PER_VH).
-       * So one slide spanning `PER_SHOWCASE_SLIDE` units needs innerHeight × (PER / UNITS_PER_VH) scroll.
+       * So one slide spanning `PER_SHOWCASE_SLIDE` units needs heroHeight × (PER / UNITS_PER_VH) scroll.
        * Example: PER=400 (old bug) → 100× viewport height per slide. Use SMALL values (timeline units).
        */
       const projectsPhaseStart = scatterPhaseStart + scatterPhaseDuration
-      /** ~one viewport scroll per slide (PER=4 → scroll ratio 4/4 = 1). */
-      const PER_SHOWCASE_SLIDE = 4
-      const SHOWCASE_WIPE_DURATION = Math.min(PER_SHOWCASE_SLIDE * 0.22, 0.9)
+      /** 125lvh per slide (PER=5 → scroll ratio 5/4 = 1.25). */
+      const PER_SHOWCASE_SLIDE = 5
+      /** 50lvh wipe: 2 units × 25lvh. */
+      const SHOWCASE_WIPE_DURATION = 2
       const SHOWCASE_CLIP_VISIBLE = 'inset(0% 0% 0% 0%)'
       const SHOWCASE_CLIP_HIDDEN_RIGHT = 'inset(0% 0% 0% 100%)'
       const SHOWCASE_CARD_OFFSET_X = 10
