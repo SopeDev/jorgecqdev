@@ -132,6 +132,12 @@ export function HomeHero() {
       const SHOWCASE_CARD_OFFSET_X = 10
       const projectsPhaseDuration = SHOWCASE_SLIDE_COUNT * PER_SHOWCASE_SLIDE
       const TIMELINE_UNITS = projectsPhaseStart + projectsPhaseDuration
+      section.__showcaseTiming = {
+        projectsPhaseStart,
+        perSlide: PER_SHOWCASE_SLIDE,
+        wipeDuration: SHOWCASE_WIPE_DURATION,
+        timelineUnits: TIMELINE_UNITS,
+      }
       const focusNodes = { progress: 0 }
       const nodeScatter = { progress: 0 }
 
@@ -605,6 +611,7 @@ export function HomeHero() {
     }, section)
 
     return () => {
+      if (section) delete section.__showcaseTiming
       window.removeEventListener('load', onLateScrollCheck)
       window.clearTimeout(lateCheckTimeout)
       window.cancelAnimationFrame(introRaf)
