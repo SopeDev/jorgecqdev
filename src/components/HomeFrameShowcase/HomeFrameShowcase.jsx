@@ -18,7 +18,7 @@ export function HomeFrameShowcase() {
       <div className="pointer-events-none absolute inset-x-[10vw] inset-y-[15vh] overflow-hidden">
         <p
           data-showcase-legend
-          className="pointer-events-none absolute top-5 right-5 z-30 font-mono text-[0.68rem] tracking-[0.18em] text-muted-foreground select-none"
+          className="pointer-events-none absolute top-5 right-5 z-30 font-mono text-[0.8rem] tracking-[0.18em] text-white select-none"
         >
           1/5
         </p>
@@ -28,7 +28,7 @@ export function HomeFrameShowcase() {
             <div
               key={project.slug}
               data-showcase-slide={index}
-              className="pointer-events-none absolute inset-0 opacity-0"
+              className="pointer-events-none absolute inset-0 opacity-0 will-change-[clip-path]"
             >
               <p
                 className="pointer-events-none absolute left-5 top-5 z-30 max-w-[min(90%,28rem)] text-left text-[clamp(0.95rem,2vw,1.35rem)] font-semibold leading-tight tracking-[-0.02em] text-foreground drop-shadow-[0_1px_20px_rgba(0,0,0,0.5)] select-none"
@@ -47,8 +47,8 @@ export function HomeFrameShowcase() {
                 aria-hidden
               />
 
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center pb-8 pt-16 md:pb-10 md:pt-20">
-                <div className="pointer-events-auto flex flex-wrap justify-center gap-3">
+              <div className="pointer-events-none absolute right-5 bottom-5 z-20 flex justify-end pl-5 md:right-6 md:bottom-6">
+                <div className="pointer-events-auto flex flex-wrap justify-end gap-3">
                   <MinimalButton href={`/project/${project.slug}`} variant="solid" size="lg">
                     Ver caso
                   </MinimalButton>

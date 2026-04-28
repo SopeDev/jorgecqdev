@@ -16,13 +16,17 @@ const NAV = [
 const publicAsset = (path) =>
   `${process.env.NEXT_PUBLIC_BASE_PATH || ''}${path}`
 
+const HERO_FRAME_VISIBLE_EVENT = 'home-hero-frame-visible-change'
+
 export function Header() {
   const [navOpen, setNavOpen] = useState(false)
   const [menuVisible, setMenuVisible] = useState(false)
+  const [heroFrameVisible, setHeroFrameVisible] = useState(false)
   const panelRef = useRef(null)
   const linksRef = useRef([])
   const pathname = usePathname()
   const isHome = pathname === '/'
+  const useDarkHamburger = isHome && heroFrameVisible && !navOpen
   const toggleNav = () => {
     const nextNavOpen = !navOpen
     if (nextNavOpen) setMenuVisible(true)
@@ -104,6 +108,19 @@ export function Header() {
   }, [navOpen, menuVisible])
 
   useEffect(() => {
+    if (!isHome) return
+
+    const onFrameVisibleChange = (event) => {
+      setHeroFrameVisible(Boolean(event.detail?.visible))
+    }
+
+    window.addEventListener(HERO_FRAME_VISIBLE_EVENT, onFrameVisibleChange)
+    return () => {
+      window.removeEventListener(HERO_FRAME_VISIBLE_EVENT, onFrameVisibleChange)
+    }
+  }, [isHome])
+
+  useEffect(() => {
     if (!navOpen) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
@@ -180,7 +197,8 @@ export function Header() {
           >
             <span
               className={cn(
-                'absolute left-[2px] h-[2px] bg-foreground transition-[background-color,width,transform,top,left] duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)]',
+                'absolute left-[2px] h-[2px] transition-[background-color,width,transform,top,left] duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)]',
+                useDarkHamburger ? 'bg-black' : 'bg-foreground',
                 navOpen
                   ? 'top-[12px] w-[26px] rotate-[-45deg]'
                   : 'top-[4px] w-[26px] rotate-0'
@@ -188,7 +206,8 @@ export function Header() {
             />
             <span
               className={cn(
-                'absolute left-[2px] h-[2px] bg-foreground transition-[background-color,width,transform,top,left] duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)]',
+                'absolute left-[2px] h-[2px] transition-[background-color,width,transform,top,left] duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)]',
+                useDarkHamburger ? 'bg-black' : 'bg-foreground',
                 navOpen
                   ? 'top-[12px] left-[12px] w-0'
                   : 'top-[14px] w-[18px] group-hover:w-[26px]'
@@ -196,7 +215,8 @@ export function Header() {
             />
             <span
               className={cn(
-                'absolute left-[2px] h-[2px] bg-foreground transition-[background-color,width,transform,top,left] duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)]',
+                'absolute left-[2px] h-[2px] transition-[background-color,width,transform,top,left] duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)]',
+                useDarkHamburger ? 'bg-black' : 'bg-foreground',
                 navOpen
                   ? 'top-[12px] w-[26px] rotate-[45deg]'
                   : 'top-[24px] w-[10px] rotate-0 group-hover:w-[26px]'
@@ -207,7 +227,7 @@ export function Header() {
 
         <Link
           href="/"
-          className="absolute right-[30px] top-[30px] z-[90] flex items-center text-foreground transition-opacity duration-200 hover:opacity-80"
+          className="absolute right-[30px] top-[30px] z-[90] grid items-center text-foreground transition-opacity duration-200 hover:opacity-80"
           onClick={() => setNavOpen(false)}
         >
           <Image
@@ -215,8 +235,22 @@ export function Header() {
             alt="jorgeCQ"
             width={1366}
             height={460}
-            className="h-8 w-auto rounded-sm md:h-9"
+            className={cn(
+              'col-start-1 row-start-1 h-8 w-auto rounded-sm transition-opacity duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)] md:h-9',
+              useDarkHamburger ? 'opacity-0' : 'opacity-100'
+            )}
             priority
+          />
+          <Image
+            src={publicAsset('/logo-black.png')}
+            alt=""
+            width={1366}
+            height={460}
+            className={cn(
+              'col-start-1 row-start-1 h-8 w-auto rounded-sm transition-opacity duration-[250ms] ease-[cubic-bezier(.2,.7,.3,.9)] md:h-9',
+              useDarkHamburger ? 'opacity-100' : 'opacity-0'
+            )}
+            aria-hidden
           />
         </Link>
       </div>

@@ -12,6 +12,8 @@ import { HomeFrameShowcase } from '@/components/HomeFrameShowcase/HomeFrameShowc
 
 gsap.registerPlugin(ScrollTrigger)
 
+const HERO_FRAME_VISIBLE_EVENT = 'home-hero-frame-visible-change'
+
 export function HomeHero() {
   const copyRef = useRef(null)
   const sectionRef = useRef(null)
@@ -24,9 +26,21 @@ export function HomeHero() {
     let introSettled = false
     let onLateScrollCheck = () => {}
     let lateCheckTimeout = 0
+    let lastFrameVisible = false
     const section = sectionRef.current
     const copy = copyRef.current
     if (!section || !copy) return
+
+    const dispatchFrameVisible = (visible) => {
+      const nextVisible = Boolean(visible)
+      if (nextVisible === lastFrameVisible) return
+      lastFrameVisible = nextVisible
+      window.dispatchEvent(
+        new CustomEvent(HERO_FRAME_VISIBLE_EVENT, {
+          detail: { visible: nextVisible },
+        })
+      )
+    }
 
     const applyScrollLock = () => {
       if (bodyScrollLocked) return
@@ -111,9 +125,11 @@ export function HomeHero() {
        * Example: PER=400 (old bug) → 100× viewport height per slide. Use SMALL values (timeline units).
        */
       const projectsPhaseStart = scatterPhaseStart + scatterPhaseDuration
-      /** ~half a viewport scroll per slide (PER=2 → scroll ratio 2/4 = 0.5). Tune 1–3 for snappier. */
-      const PER_SHOWCASE_SLIDE = 2
-      const SHOWCASE_CROSS = Math.min(PER_SHOWCASE_SLIDE * 0.15, 0.35)
+      /** ~one viewport scroll per slide (PER=4 → scroll ratio 4/4 = 1). */
+      const PER_SHOWCASE_SLIDE = 4
+      const SHOWCASE_WIPE_DURATION = Math.min(PER_SHOWCASE_SLIDE * 0.22, 0.9)
+      const SHOWCASE_CLIP_VISIBLE = 'inset(0% 0% 0% 0%)'
+      const SHOWCASE_CLIP_HIDDEN_RIGHT = 'inset(0% 0% 0% 100%)'
       const projectsPhaseDuration = SHOWCASE_SLIDE_COUNT * PER_SHOWCASE_SLIDE
       const TIMELINE_UNITS = projectsPhaseStart + projectsPhaseDuration
       const focusNodes = { progress: 0 }
@@ -158,7 +174,13 @@ export function HomeHero() {
         if (showcaseLegend) showcaseLegend.textContent = `1/${SHOWCASE_SLIDE_COUNT}`
         for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
           const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-          if (slide) gsap.set(slide, { opacity: i === 0 ? 1 : 0 })
+          if (slide) {
+            gsap.set(slide, {
+              opacity: 1,
+              zIndex: i + 1,
+              clipPath: i === 0 ? SHOWCASE_CLIP_VISIBLE : SHOWCASE_CLIP_HIDDEN_RIGHT,
+            })
+          }
         }
         return
       }
@@ -187,7 +209,13 @@ export function HomeHero() {
       }
       for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
         const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-        if (slide) gsap.set(slide, { opacity: 0 })
+        if (slide) {
+          gsap.set(slide, {
+            opacity: 1,
+            zIndex: i + 1,
+            clipPath: SHOWCASE_CLIP_HIDDEN_RIGHT,
+          })
+        }
       }
 
       const heroScrollTl = gsap.timeline({
@@ -203,7 +231,19 @@ export function HomeHero() {
           scrub: true,
           anticipatePin: 1,
           invalidateOnRefresh: true,
-          markers: process.env.NODE_ENV === 'development',
+          markers: false,
+          onUpdate: (self) => {
+            dispatchFrameVisible(
+              self.isActive && self.progress * TIMELINE_UNITS >= projectsPhaseStart
+            )
+          },
+          onLeave: () => dispatchFrameVisible(false),
+          onLeaveBack: () => dispatchFrameVisible(false),
+          onEnterBack: (self) => {
+            dispatchFrameVisible(
+              self.progress * TIMELINE_UNITS >= projectsPhaseStart
+            )
+          },
         },
       })
 
@@ -432,31 +472,21 @@ export function HomeHero() {
       for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
         const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
         if (!slide) continue
-        const segEnd = projectsPhaseStart + (i + 1) * PER_SHOWCASE_SLIDE
-        const fadeOutStart = segEnd - SHOWCASE_CROSS
-        if (i === 0) {
-          heroScrollTl.fromTo(
-            slide,
-            { opacity: 0 },
-            { opacity: 1, duration: SHOWCASE_CROSS, ease: 'none' },
-            projectsPhaseStart
-          )
-        } else {
-          const fadeInStart = projectsPhaseStart + i * PER_SHOWCASE_SLIDE - SHOWCASE_CROSS
-          heroScrollTl.fromTo(
-            slide,
-            { opacity: 0 },
-            { opacity: 1, duration: SHOWCASE_CROSS, ease: 'none' },
-            fadeInStart
-          )
-        }
-        if (i < SHOWCASE_SLIDE_COUNT - 1) {
-          heroScrollTl.to(
-            slide,
-            { opacity: 0, duration: SHOWCASE_CROSS, ease: 'none' },
-            fadeOutStart
-          )
-        }
+        const wipeStart =
+          i === 0
+            ? projectsPhaseStart
+            : projectsPhaseStart + i * PER_SHOWCASE_SLIDE - SHOWCASE_WIPE_DURATION
+        heroScrollTl.fromTo(
+          slide,
+          { clipPath: SHOWCASE_CLIP_HIDDEN_RIGHT },
+          {
+            clipPath: SHOWCASE_CLIP_VISIBLE,
+            duration: SHOWCASE_WIPE_DURATION,
+            ease: 'none',
+            immediateRender: false,
+          },
+          wipeStart
+        )
       }
 
       const atPageTop = () => window.scrollY <= 2
@@ -573,6 +603,7 @@ export function HomeHero() {
       window.clearTimeout(lateCheckTimeout)
       window.cancelAnimationFrame(introRaf)
       window.cancelAnimationFrame(introCheckRaf)
+      dispatchFrameVisible(false)
       releaseScrollLock()
       ctx.revert()
     }
