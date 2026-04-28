@@ -11,6 +11,7 @@ import { SHOWCASE_SLIDE_COUNT } from '@/content/showcaseProjects'
 import { HomeFrameShowcase } from '@/components/HomeFrameShowcase/HomeFrameShowcase'
 
 gsap.registerPlugin(ScrollTrigger)
+ScrollTrigger.config({ ignoreMobileResize: true })
 
 const HERO_FRAME_VISIBLE_EVENT = 'home-hero-frame-visible-change'
 
@@ -120,7 +121,7 @@ export function HomeHero() {
       const framePhaseDuration = scatterPhaseDuration * 0.4
       /**
        * Showcase: scroll math is NOT “vh × UNITS_PER_VH” — that blew up slide length by 100×.
-       * Actual pin mapping: pixels_scrubbed ≈ innerHeight × (timeline_units / UNITS_PER_VH).
+       * Actual pin mapping: pixels_scrubbed ≈ stable hero height × (timeline_units / UNITS_PER_VH).
        * So one slide spanning `PER_SHOWCASE_SLIDE` units needs innerHeight × (PER / UNITS_PER_VH) scroll.
        * Example: PER=400 (old bug) → 100× viewport height per slide. Use SMALL values (timeline units).
        */
@@ -223,7 +224,7 @@ export function HomeHero() {
           trigger: section,
           start: 'top top',
           end: () =>
-            `+=${window.innerHeight * (TIMELINE_UNITS / UNITS_PER_VH)}`,
+            `+=${section.offsetHeight * (TIMELINE_UNITS / UNITS_PER_VH)}`,
           pin: true,
           pinType: 'fixed',
           pinSpacing: true,
@@ -418,8 +419,8 @@ export function HomeHero() {
       }
 
       const frameGrowVars = [
-        [frameTop, { height: '15vh' }],
-        [frameBottom, { height: '15vh' }],
+        [frameTop, { height: '15lvh' }],
+        [frameBottom, { height: '15lvh' }],
         [frameLeft, { width: '10vw' }],
         [frameRight, { width: '10vw' }],
       ]
@@ -613,7 +614,7 @@ export function HomeHero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative isolate flex min-h-[100svh] flex-col overflow-hidden border-b border-border bg-background"
+      className="relative isolate flex min-h-[100lvh] flex-col overflow-hidden border-b border-border bg-background"
       aria-labelledby="hero-heading"
       data-hero-section
     >

@@ -15,7 +15,7 @@ export function HomeFrameShowcase() {
       className="pointer-events-none absolute inset-0 z-12 opacity-0 [visibility:hidden]"
       aria-hidden
     >
-      <div className="pointer-events-none absolute inset-x-[10vw] inset-y-[15vh] overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-[10vw] inset-y-[15lvh] overflow-hidden">
         <p
           data-showcase-legend
           className="pointer-events-none absolute top-5 right-5 z-30 font-mono text-[0.8rem] tracking-[0.18em] text-white select-none"
