@@ -60,7 +60,7 @@ export function ProjectPageShell({ project }) {
 
   return (
     <main ref={shellRef} className="border-b border-border bg-background">
-      <section className="relative h-[100svh] min-h-[34rem] w-full overflow-hidden">
+      <section className="relative h-[100lvh] min-h-[34rem] w-full overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           data-project-enter
