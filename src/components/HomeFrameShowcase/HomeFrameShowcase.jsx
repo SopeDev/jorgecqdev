@@ -81,12 +81,17 @@ export function HomeFrameShowcase() {
     const meta = slide.querySelector('[data-showcase-meta]')
     const actions = slide.querySelector('[data-showcase-actions]')
     const legend = showcaseRoot.querySelector('[data-showcase-legend]')
+    const frameRoot = section.querySelector('[data-hero-frame]')
     const frameTop = section.querySelector('[data-hero-frame-top]')
     const frameBottom = section.querySelector('[data-hero-frame-bottom]')
     const frameLeft = section.querySelector('[data-hero-frame-left]')
     const frameRight = section.querySelector('[data-hero-frame-right]')
 
     const rect = viewport.getBoundingClientRect()
+    // Frame sits at z-[3] in markup; viewport is promoted to z-120 — without this the
+    // expanding image paints over the white bars, so the frame easing is invisible.
+    if (frameRoot) gsap.set(frameRoot, { zIndex: 125 })
+
     gsap.set(viewport, {
       position: 'fixed',
       top: rect.top,
@@ -114,6 +119,7 @@ export function HomeFrameShowcase() {
         router.push(`/project/${project.slug}`)
       },
       onInterrupt: () => {
+        if (frameRoot) gsap.set(frameRoot, { clearProps: 'zIndex' })
         gsap.set(viewport, {
           clearProps:
             'position,top,left,width,height,right,bottom,zIndex,pointerEvents,margin,willChange',
@@ -121,6 +127,9 @@ export function HomeFrameShowcase() {
         isTransitioningRef.current = false
       },
     })
+
+    const TRANSITION_START = 0.16
+    const TRANSITION_DURATION = 0.85
 
     tl.to(
       [meta, legend, actions],
@@ -132,33 +141,36 @@ export function HomeFrameShowcase() {
       0
     )
     tl.to(
-      [frameTop, frameBottom],
-      {
-        height: 0,
-        duration: 0.9,
-      },
-      0.34
-    )
-
-    tl.to(
-      [frameLeft, frameRight],
-      {
-        width: 0,
-        duration: 0.9,
-      },
-      0.34
-    )
-
-    tl.to(
       viewport,
       {
         top: 0,
         left: 0,
         width: window.innerWidth,
         height: window.innerHeight,
-        duration: 1.14,
+        duration: TRANSITION_DURATION,
+        ease: 'power3.out',
       },
-      0.16
+      TRANSITION_START
+    )
+
+    tl.to(
+      [frameTop, frameBottom],
+      {
+        height: 0,
+        duration: TRANSITION_DURATION,
+        ease: 'ease.in',
+      },
+      TRANSITION_START
+    )
+
+    tl.to(
+      [frameLeft, frameRight],
+      {
+        width: 0,
+        duration: TRANSITION_DURATION,
+        ease: 'ease.in',
+      },
+      TRANSITION_START
     )
 
   }
