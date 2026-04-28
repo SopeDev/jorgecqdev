@@ -33,6 +33,10 @@ const LOCAL_REACT_BOOST_X = 68
 const LOCAL_REACT_BOOST_Y = 56
 const FOCUS_TARGET_SELECTOR = '[data-node-focus-target]'
 const FOCUS_PROGRESS_PROP = '__nodeFocusProgress'
+/** 0–1: background grid nodes pushed radially off-canvas (hero sequence). */
+const SCATTER_PROGRESS_PROP = '__nodeScatterProgress'
+/** Push distance at progress 1 as a fraction of max(viewport w,h). */
+const SCATTER_EXIT_FR = 1.08
 
 function initNodes(w, h) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
@@ -174,6 +178,7 @@ function NodeLayer({ focusLayer = false }) {
       const { nodes, w, h } = st
       const mr = mouseRef.current
       const focusProgress = focusLayer ? clamp01(wrap[FOCUS_PROGRESS_PROP] || 0) : 0
+      const scatterProgress = !focusLayer ? clamp01(wrap[SCATTER_PROGRESS_PROP] || 0) : 0
       if (focusProgress > 0 && !focusTargetEl) {
         focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
       }
@@ -224,6 +229,22 @@ function NodeLayer({ focusLayer = false }) {
           const focusEase = focusProgress
           x += (targetX - x) * focusEase
           y += (targetY - y) * focusEase
+        }
+
+        if (scatterProgress > 0) {
+          const cx = w * 0.5
+          const cy = h * 0.5
+          let nx = x - cx
+          let ny = y - cy
+          let len = Math.hypot(nx, ny)
+          if (len < 1e-4) {
+            nx = Math.cos(n.phase * 9.17)
+            ny = Math.sin(n.phase * 9.17)
+            len = 1
+          }
+          const push = scatterProgress * Math.max(w, h) * SCATTER_EXIT_FR
+          x += (nx / len) * push
+          y += (ny / len) * push
         }
 
         rx[i] = x
