@@ -7,6 +7,7 @@ import { MinimalButton } from '@/components/MinimalButton/MinimalButton'
 import { HeroSystemField } from '@/components/HeroSystemField/HeroSystemField'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { ENFOQUE_CONTENT } from '@/content/siteNarrative'
+import { HomeProjectCardsGrid } from '@/components/HomeProjectCardsGrid/HomeProjectCardsGrid'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -91,6 +92,9 @@ export function HomeHero() {
       const scatterPhaseDuration = 6
       const enfoqueFadeOutStart = 13
       const enfoqueFadeOutDuration = 2
+      /** Former frame window: tiles fade/scale in while scatter finishes (15 → 18). */
+      const cardsPhaseStart = 15
+      const cardsPhaseDuration = 3
       const TIMELINE_UNITS = scatterPhaseStart + scatterPhaseDuration
       const focusNodes = { progress: 0 }
       const nodeScatter = { progress: 0 }
@@ -120,6 +124,8 @@ export function HomeHero() {
         gsap.set(focusNodeLayer, { opacity: 0, filter: 'blur(14px)' })
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
+        const projectCards = section.querySelectorAll('[data-project-card]')
+        gsap.set(projectCards, { opacity: 1, scale: 1 })
         return
       }
 
@@ -130,6 +136,13 @@ export function HomeHero() {
       setNodeFocusProgress(0)
       setNodeScatterProgress(0)
       gsap.set(focusNodeLayer, { opacity: 1, filter: 'blur(0px)' })
+      const projectCards = section.querySelectorAll('[data-project-card]')
+      gsap.set(projectCards, {
+        opacity: 0,
+        scale: 0.88,
+        transformOrigin: '50% 58%',
+      })
+
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
@@ -317,6 +330,23 @@ export function HomeHero() {
         )
       }
 
+      if (projectCards.length) {
+        heroScrollTl.to(
+          projectCards,
+          {
+            opacity: 1,
+            scale: 1,
+            duration: cardsPhaseDuration,
+            ease: 'power3.out',
+            stagger: {
+              amount: Math.min(2.45, cardsPhaseDuration * 0.82),
+              from: 'random',
+            },
+          },
+          cardsPhaseStart
+        )
+      }
+
       const atPageTop = () => window.scrollY <= 2
 
       const setIntroToFinishedState = () => {
@@ -460,6 +490,8 @@ export function HomeHero() {
         className="noise-hero pointer-events-none absolute inset-0 -z-10 opacity-85"
         aria-hidden
       />
+
+      <HomeProjectCardsGrid />
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 py-10 md:py-12">
         <div ref={copyRef} className="relative z-[4] max-w-[72rem]">
