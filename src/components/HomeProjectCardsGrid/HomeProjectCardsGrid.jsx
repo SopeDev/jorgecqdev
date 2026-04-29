@@ -11,7 +11,7 @@ export function HomeProjectCardsGrid() {
       className="pointer-events-none absolute inset-0 z-[11] flex items-center justify-center px-4 py-16 md:px-8 md:py-20"
       aria-hidden
     >
-      <div className="pointer-events-none grid w-full max-w-5xl grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+      <div className="pointer-events-none grid w-full max-w-6xl grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
         {SHOWCASE_PROJECTS.map((project, index) => (
           <article
             key={project.slug}
@@ -27,7 +27,7 @@ export function HomeProjectCardsGrid() {
               <img
                 src={project.imageSrc}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-[0.1] transition-opacity duration-500 group-hover:opacity-[0.28]"
+                className="absolute inset-0 h-full w-full object-cover opacity-[0.1]"
               />
             ) : null}
 
@@ -47,18 +47,11 @@ export function HomeProjectCardsGrid() {
 
             <div
               className={cn(
-                'absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background/92 via-background/55 to-transparent p-4 md:p-5',
+                'absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background/98 via-background/78 to-transparent p-4 md:p-5',
                 project.cta
                   ? 'pointer-events-auto opacity-100'
                   : 'pointer-events-none opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100'
               )}
-              style={
-                project.secondary
-                  ? {
-                      backgroundImage: `linear-gradient(to top, ${project.brandBg}F2 0%, ${project.secondary}66 46%, transparent 100%)`,
-                    }
-                  : undefined
-              }
             >
               <p className="font-mono text-[0.62rem] tracking-[0.18em] text-muted-foreground uppercase">
                 {project.cta ? 'Contacto' : project.client}
