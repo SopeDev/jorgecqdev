@@ -4,7 +4,11 @@ import { useRef, useEffect } from 'react'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { cn } from '@/lib/utils'
 
-const NODE_COUNT = 50
+/** Default nodes per hero layer (caller passes explicit counts). */
+export const BG_FIELD_NODE_COUNT = 30
+export const FOCUS_FIELD_NODE_COUNT = 30
+export const POST_GRID_FIELD_NODE_COUNT = 40
+
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
 /** Soft outer halo: circle radius = NODE_RADIUS * this (avoids per-node `shadowBlur`, which is costly). */
@@ -38,9 +42,9 @@ const SCATTER_PROGRESS_PROP = '__nodeScatterProgress'
 /** Push distance at progress 1 as a fraction of max(viewport w,h). */
 const SCATTER_EXIT_FR = 1.08
 
-function initNodes(w, h) {
+function initNodes(w, h, nodeCount) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
-  return Array.from({ length: NODE_COUNT }, () => {
+  return Array.from({ length: nodeCount }, () => {
     /** 0 = back, 1 = front — drives size, brightness, and link weight. */
     const depth = Math.pow(Math.random(), 0.85)
     return {
@@ -82,10 +86,8 @@ function getFocusTargetRect(wrap, target) {
   }
 }
 
-/**
- * Low-contrast node–link field: drift, soft link breathing, mouse parallax.
- */
-function NodeLayer({ focusLayer = false }) {
+/** `background`: scatter-driven; `focus`: focus-cluster + fade sibling; `postGrid`: reserved for hero tail (no scatter/focus). */
+function NodeLayer({ layerMode = 'background', nodeCount = BG_FIELD_NODE_COUNT }) {
   const canvasRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
   const mouseRef = useRef({ x: 0, y: 0, tx: 0, ty: 0 })
@@ -127,11 +129,11 @@ function NodeLayer({ focusLayer = false }) {
       const prev = stateRef.current
       if (!prev) {
         stateRef.current = {
-          nodes: initNodes(w, h),
+          nodes: initNodes(w, h, nodeCount),
           w,
           h,
-          rx: new Float32Array(NODE_COUNT),
-          ry: new Float32Array(NODE_COUNT),
+          rx: new Float32Array(nodeCount),
+          ry: new Float32Array(nodeCount),
           linkBuckets: null,
         }
       } else {
@@ -177,8 +179,12 @@ function NodeLayer({ focusLayer = false }) {
       }
       const { nodes, w, h } = st
       const mr = mouseRef.current
-      const focusProgress = focusLayer ? clamp01(wrap[FOCUS_PROGRESS_PROP] || 0) : 0
-      const scatterProgress = !focusLayer ? clamp01(wrap[SCATTER_PROGRESS_PROP] || 0) : 0
+      const focusProgress =
+        layerMode === 'focus' ? clamp01(wrap[FOCUS_PROGRESS_PROP] || 0) : 0
+      const scatterProgress =
+        layerMode === 'background'
+          ? clamp01(wrap[SCATTER_PROGRESS_PROP] || 0)
+          : 0
       if (focusProgress > 0 && !focusTargetEl) {
         focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
       }
@@ -403,15 +409,18 @@ function NodeLayer({ focusLayer = false }) {
       io.disconnect()
       window.removeEventListener('mousemove', onMove)
     }
-  }, [focusLayer, prefersReduced])
+  }, [layerMode, nodeCount, prefersReduced])
 
   return (
     <canvas
       ref={canvasRef}
-      data-hero-focus-node-layer={focusLayer ? '' : undefined}
+      data-hero-focus-node-layer={layerMode === 'focus' ? '' : undefined}
+      data-hero-post-grid-field={layerMode === 'postGrid' ? '' : undefined}
       className={cn(
-        'absolute inset-0 h-full w-full opacity-[0.6] [contain:paint]',
-        focusLayer && 'will-change-[opacity,filter]'
+        'absolute inset-0 h-full w-full [contain:paint]',
+        layerMode === 'background' && 'z-0 opacity-[0.6]',
+        layerMode === 'focus' && 'z-[1] opacity-[0.6] will-change-[opacity,filter]',
+        layerMode === 'postGrid' && 'z-[2] opacity-0'
       )}
     />
   )
@@ -427,8 +436,9 @@ export function HeroSystemField({ className, ...props }) {
       {...props}
       aria-hidden
     >
-      <NodeLayer />
-      <NodeLayer focusLayer />
+      <NodeLayer layerMode="background" nodeCount={BG_FIELD_NODE_COUNT} />
+      <NodeLayer layerMode="focus" nodeCount={FOCUS_FIELD_NODE_COUNT} />
+      <NodeLayer layerMode="postGrid" nodeCount={POST_GRID_FIELD_NODE_COUNT} />
     </div>
   )
 }

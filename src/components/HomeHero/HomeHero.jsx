@@ -57,6 +57,7 @@ export function HomeHero() {
       const enfoqueSteelField = section.querySelector('[data-enfoque-steel-field]')
       const systemField = section.querySelector('[data-hero-system-field]')
       const focusNodeLayer = section.querySelector('[data-hero-focus-node-layer]')
+      const postGridField = section.querySelector('[data-hero-post-grid-field]')
       const scrollIndicator = section.querySelector('[data-hero-scroll-indicator]')
       const scrollIndicatorLine = section.querySelector('[data-hero-scroll-line]')
       const focusBlock = section.querySelector('[data-focus-block]')
@@ -134,6 +135,7 @@ export function HomeHero() {
         setNodeFocusProgress(1)
         lastFocusAttr = '1'
         gsap.set(focusNodeLayer, { opacity: 0, filter: 'blur(14px)' })
+        if (postGridField) gsap.set(postGridField, { opacity: 0.6 })
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
         const projectCards = section.querySelectorAll('[data-project-card]')
@@ -148,6 +150,7 @@ export function HomeHero() {
       setNodeFocusProgress(0)
       setNodeScatterProgress(0)
       gsap.set(focusNodeLayer, { opacity: 1, filter: 'blur(0px)' })
+      if (postGridField) gsap.set(postGridField, { opacity: 0 })
       const projectCards = section.querySelectorAll('[data-project-card]')
       gsap.set(projectCards, {
         opacity: 0,
@@ -342,6 +345,18 @@ export function HomeHero() {
             },
           },
           cardsPhaseStart
+        )
+      }
+
+      if (postGridField) {
+        heroScrollTl.to(
+          postGridField,
+          {
+            opacity: 0.6,
+            duration: 1.25,
+            ease: 'power2.out',
+          },
+          '>'
         )
       }
 
