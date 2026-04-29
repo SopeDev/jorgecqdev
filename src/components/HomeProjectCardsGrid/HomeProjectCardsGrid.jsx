@@ -31,7 +31,7 @@ export function HomeProjectCardsGrid() {
               aria-hidden
             />
 
-            {!project.placeholder && project.imageSrc ? (
+            {!project.cta && project.imageSrc ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={project.imageSrc}
@@ -47,7 +47,7 @@ export function HomeProjectCardsGrid() {
               >
                 {project.monogram}
               </span>
-              {!project.placeholder && (
+              {!project.cta && (
                 <span className="mt-3 max-w-[11rem] text-center font-mono text-[0.58rem] tracking-[0.22em] text-white/38 uppercase">
                   {project.client.split(' ')[0]}
                 </span>
@@ -56,18 +56,20 @@ export function HomeProjectCardsGrid() {
 
             <div
               className={cn(
-                'pointer-events-none absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background/92 via-background/55 to-transparent p-4 opacity-0 transition-opacity duration-300 ease-out md:p-5',
-                'group-hover:pointer-events-auto group-hover:opacity-100'
+                'absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-background/92 via-background/55 to-transparent p-4 md:p-5',
+                project.cta
+                  ? 'pointer-events-auto opacity-100'
+                  : 'pointer-events-none opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100'
               )}
             >
               <p className="font-mono text-[0.62rem] tracking-[0.18em] text-muted-foreground uppercase">
-                {project.placeholder ? 'Disponible' : project.client}
+                {project.cta ? 'Contacto' : project.client}
               </p>
               <p className="mt-2 text-sm font-medium leading-snug tracking-[-0.02em] text-foreground md:text-[0.95rem]">
                 {project.title}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {!project.placeholder && (
+                {!project.cta && (
                   <Link
                     href={`/work#${project.slug}`}
                     className="rounded-sm border border-border bg-background/90 px-3 py-2 text-xs font-medium text-foreground transition-colors hover:bg-card-hover"
@@ -81,12 +83,12 @@ export function HomeProjectCardsGrid() {
                   rel={project.liveUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
                   className={cn(
                     'rounded-sm border px-3 py-2 text-xs font-medium transition-colors',
-                    project.placeholder
+                    project.cta
                       ? 'border-primary/45 bg-primary/15 text-primary hover:bg-primary/25'
                       : 'border-white/[0.18] bg-background/55 text-foreground hover:bg-card-hover/90'
                   )}
                 >
-                  {project.placeholder ? 'Explorar trabajo' : 'Visitar sitio'}
+                  {project.cta ? 'Ir a contacto' : 'Visitar sitio'}
                 </Link>
               </div>
             </div>
