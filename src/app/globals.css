@@ -182,6 +182,11 @@
   }
 }
 
+/* Home route is hero-only; footer would extend scroll past the pinned scrub end */
+body:has(main[data-home-hero-only]) footer {
+  display: none;
+}
+
 /**
  * Graphic language guardrails (plan Phase 2):
  * Max two motif types per section; strokes use line-diagram / border; square caps only in SVGs.

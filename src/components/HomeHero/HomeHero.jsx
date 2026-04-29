@@ -1,14 +1,14 @@
 'use client'
 
 import { Fragment, useLayoutEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { MinimalButton } from '@/components/MinimalButton/MinimalButton'
 import { HeroSystemField } from '@/components/HeroSystemField/HeroSystemField'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { ENFOQUE_CONTENT } from '@/content/siteNarrative'
-import { SHOWCASE_SLIDE_COUNT } from '@/content/showcaseProjects'
-import { HomeFrameShowcase } from '@/components/HomeFrameShowcase/HomeFrameShowcase'
+import { SESSION_RESTORE_HERO_END } from '@/content/heroShowcaseTimeline'
 
 gsap.registerPlugin(ScrollTrigger)
 ScrollTrigger.config({ ignoreMobileResize: true })
@@ -16,8 +16,10 @@ ScrollTrigger.config({ ignoreMobileResize: true })
 const HERO_FRAME_VISIBLE_EVENT = 'home-hero-frame-visible-change'
 
 export function HomeHero() {
+  const router = useRouter()
   const copyRef = useRef(null)
   const sectionRef = useRef(null)
+  const scrollRoutedToProyectosRef = useRef(false)
   const { prefersReduced } = useMotionSafe()
 
   useLayoutEffect(() => {
@@ -76,8 +78,6 @@ export function HomeHero() {
       const frameBottom = section.querySelector('[data-hero-frame-bottom]')
       const frameLeft = section.querySelector('[data-hero-frame-left]')
       const frameRight = section.querySelector('[data-hero-frame-right]')
-      const showcaseRoot = section.querySelector('[data-hero-showcase]')
-      const showcaseLegend = section.querySelector('[data-showcase-legend]')
       const focusClipRevealEls = [...focusTitleParts].filter(Boolean)
       const titleInDelay = 0.12
       const titleInDuration = 1.2
@@ -116,28 +116,8 @@ export function HomeHero() {
       const enfoqueFadeOutDuration = 2
       const framePhaseStart = 15
       const framePhaseDuration = 3
-      /**
-       * Showcase: scroll math is NOT “vh × UNITS_PER_VH” — that blew up slide length by 100×.
-       * Actual pin mapping: pixels_scrubbed ≈ stable hero height × (timeline_units / UNITS_PER_VH).
-       * So one slide spanning `PER_SHOWCASE_SLIDE` units needs heroHeight × (PER / UNITS_PER_VH) scroll.
-       * Example: PER=400 (old bug) → 100× viewport height per slide. Use SMALL values (timeline units).
-       */
-      const projectsPhaseStart = scatterPhaseStart + scatterPhaseDuration
-      /** 125lvh per slide (PER=5 → scroll ratio 5/4 = 1.25). */
-      const PER_SHOWCASE_SLIDE = 5
-      /** 50lvh wipe: 2 units × 25lvh. */
-      const SHOWCASE_WIPE_DURATION = 2
-      const SHOWCASE_CLIP_VISIBLE = 'inset(0% 0% 0% 0%)'
-      const SHOWCASE_CLIP_HIDDEN_RIGHT = 'inset(0% 0% 0% 100%)'
-      const SHOWCASE_CARD_OFFSET_X = 10
-      const projectsPhaseDuration = SHOWCASE_SLIDE_COUNT * PER_SHOWCASE_SLIDE
-      const TIMELINE_UNITS = projectsPhaseStart + projectsPhaseDuration
-      section.__showcaseTiming = {
-        projectsPhaseStart,
-        perSlide: PER_SHOWCASE_SLIDE,
-        wipeDuration: SHOWCASE_WIPE_DURATION,
-        timelineUnits: TIMELINE_UNITS,
-      }
+      /** Pin ends when the frame finishes growing; slideshow lives on /proyectos. */
+      const TIMELINE_UNITS = scatterPhaseStart + scatterPhaseDuration
       const focusNodes = { progress: 0 }
       const nodeScatter = { progress: 0 }
 
@@ -152,7 +132,20 @@ export function HomeHero() {
         systemField.__nodeScatterProgress = value
       }
 
+      const shouldRestoreHeroEnd =
+        typeof window !== 'undefined' &&
+        sessionStorage.getItem(SESSION_RESTORE_HERO_END) === '1'
+
+      const goProyectosFromScroll = () => {
+        if (scrollRoutedToProyectosRef.current) return
+        scrollRoutedToProyectosRef.current = true
+        router.push('/proyectos')
+      }
+
       if (prefersReduced) {
+        if (shouldRestoreHeroEnd) {
+          sessionStorage.removeItem(SESSION_RESTORE_HERO_END)
+        }
         gsap.set(titleLines, { yPercent: 0 })
         gsap.set(paragraph, { opacity: 1 })
         gsap.set(actions, { opacity: 1 })
@@ -170,25 +163,6 @@ export function HomeHero() {
         if (frameBottom) gsap.set(frameBottom, { height: 0 })
         if (frameLeft) gsap.set(frameLeft, { width: 0 })
         if (frameRight) gsap.set(frameRight, { width: 0 })
-        if (showcaseRoot) {
-          gsap.set(showcaseRoot, {
-            opacity: 1,
-            visibility: 'visible',
-            pointerEvents: 'auto',
-          })
-        }
-        if (showcaseLegend) showcaseLegend.textContent = `1/${SHOWCASE_SLIDE_COUNT}`
-        for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
-          const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-          if (slide) {
-            gsap.set(slide, {
-              opacity: 1,
-              zIndex: i + 1,
-              xPercent: 0,
-              clipPath: i === 0 ? SHOWCASE_CLIP_VISIBLE : SHOWCASE_CLIP_HIDDEN_RIGHT,
-            })
-          }
-        }
         return
       }
 
@@ -207,24 +181,6 @@ export function HomeHero() {
         gsap.set(frameLeft, { width: 0 })
         gsap.set(frameRight, { width: 0 })
       }
-      if (showcaseRoot) {
-        gsap.set(showcaseRoot, {
-          opacity: 0,
-          visibility: 'hidden',
-          pointerEvents: 'none',
-        })
-      }
-      for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
-        const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-        if (slide) {
-          gsap.set(slide, {
-            opacity: 1,
-            zIndex: i + 1,
-            xPercent: SHOWCASE_CARD_OFFSET_X,
-            clipPath: SHOWCASE_CLIP_HIDDEN_RIGHT,
-          })
-        }
-      }
 
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
@@ -242,14 +198,17 @@ export function HomeHero() {
           markers: false,
           onUpdate: (self) => {
             dispatchFrameVisible(
-              self.isActive && self.progress * TIMELINE_UNITS >= projectsPhaseStart
+              self.isActive && self.progress * TIMELINE_UNITS >= framePhaseStart
             )
           },
-          onLeave: () => dispatchFrameVisible(false),
+          onLeave: () => {
+            dispatchFrameVisible(false)
+            goProyectosFromScroll()
+          },
           onLeaveBack: () => dispatchFrameVisible(false),
           onEnterBack: (self) => {
             dispatchFrameVisible(
-              self.progress * TIMELINE_UNITS >= projectsPhaseStart
+              self.isActive && self.progress * TIMELINE_UNITS >= framePhaseStart
             )
           },
         },
@@ -426,10 +385,10 @@ export function HomeHero() {
       }
 
       const frameGrowVars = [
-        [frameTop, { height: '15lvh' }],
-        [frameBottom, { height: '15lvh' }],
-        [frameLeft, { width: '10vw' }],
-        [frameRight, { width: '10vw' }],
+        [frameTop, { height: '86px' }],
+        [frameBottom, { height: '86px' }],
+        [frameLeft, { width: '5vw' }],
+        [frameRight, { width: '5vw' }],
       ]
       for (const [el, vars] of frameGrowVars) {
         if (!el) continue
@@ -441,63 +400,6 @@ export function HomeHero() {
             ease: 'none',
           },
           framePhaseStart
-        )
-      }
-
-      if (showcaseRoot) {
-        heroScrollTl.to(
-          showcaseRoot,
-          {
-            opacity: 1,
-            visibility: 'visible',
-            pointerEvents: 'auto',
-            duration: 0.05,
-            ease: 'none',
-          },
-          projectsPhaseStart
-        )
-      }
-
-      const projectsChapter = { progress: 0 }
-      heroScrollTl.to(
-        projectsChapter,
-        {
-          progress: 1,
-          duration: projectsPhaseDuration,
-          ease: 'none',
-          onUpdate: () => {
-            if (!showcaseLegend) return
-            const idx = Math.min(
-              SHOWCASE_SLIDE_COUNT - 1,
-              Math.floor(projectsChapter.progress * SHOWCASE_SLIDE_COUNT)
-            )
-            showcaseLegend.textContent = `${idx + 1}/${SHOWCASE_SLIDE_COUNT}`
-          },
-        },
-        projectsPhaseStart
-      )
-
-      for (let i = 0; i < SHOWCASE_SLIDE_COUNT; i++) {
-        const slide = section.querySelector(`[data-showcase-slide="${i}"]`)
-        if (!slide) continue
-        const wipeStart =
-          i === 0
-            ? projectsPhaseStart
-            : projectsPhaseStart + i * PER_SHOWCASE_SLIDE - SHOWCASE_WIPE_DURATION
-        heroScrollTl.fromTo(
-          slide,
-          {
-            xPercent: SHOWCASE_CARD_OFFSET_X,
-            clipPath: SHOWCASE_CLIP_HIDDEN_RIGHT,
-          },
-          {
-            xPercent: 0,
-            clipPath: SHOWCASE_CLIP_VISIBLE,
-            duration: SHOWCASE_WIPE_DURATION,
-            ease: 'none',
-            immediateRender: false,
-          },
-          wipeStart
         )
       }
 
@@ -608,10 +510,23 @@ export function HomeHero() {
           introTl.play(0)
         })
       })
+
+      if (shouldRestoreHeroEnd) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const st = heroScrollTl.scrollTrigger
+            if (st && typeof st.end === 'number') {
+              window.scrollTo({ top: st.end, behavior: 'instant' })
+              bypassIntro()
+              ScrollTrigger.refresh()
+              sessionStorage.removeItem(SESSION_RESTORE_HERO_END)
+            }
+          })
+        })
+      }
     }, section)
 
     return () => {
-      if (section) delete section.__showcaseTiming
       window.removeEventListener('load', onLateScrollCheck)
       window.clearTimeout(lateCheckTimeout)
       window.cancelAnimationFrame(introRaf)
@@ -620,7 +535,7 @@ export function HomeHero() {
       releaseScrollLock()
       ctx.revert()
     }
-  }, [prefersReduced])
+  }, [prefersReduced, router])
 
   return (
     <section
@@ -670,8 +585,6 @@ export function HomeHero() {
         />
       </div>
 
-      <HomeFrameShowcase />
-
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 py-10 md:py-12">
         <div
           ref={copyRef}
@@ -711,7 +624,7 @@ export function HomeHero() {
               data-hero-actions
               className="pointer-events-auto mt-11 flex w-full max-w-2xl flex-wrap items-center gap-3"
             >
-              <MinimalButton href="#proyectos" variant="solid" size="lg">
+              <MinimalButton href="/proyectos" variant="solid" size="lg">
                 Ver proyectos
               </MinimalButton>
               <MinimalButton

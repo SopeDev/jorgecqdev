@@ -70,7 +70,7 @@ export function HomeFrameShowcase() {
     const section = button.closest('[data-hero-section]')
     const image = slide?.querySelector('img')
     if (!slide || !viewport || !showcaseRoot || !section || !image) {
-      router.push(`/project/${project.slug}`)
+      router.push(`/proyecto/${project.slug}`)
       return
     }
 
@@ -116,7 +116,7 @@ export function HomeFrameShowcase() {
             at: Date.now(),
           })
         )
-        router.push(`/project/${project.slug}`)
+        router.push(`/proyecto/${project.slug}`)
       },
       onInterrupt: () => {
         if (frameRoot) gsap.set(frameRoot, { clearProps: 'zIndex' })
@@ -183,7 +183,7 @@ export function HomeFrameShowcase() {
     >
       <div
         data-showcase-viewport
-        className="pointer-events-none absolute inset-x-[10vw] inset-y-[15lvh] overflow-hidden"
+        className="pointer-events-none absolute inset-x-[5vw] inset-y-[86px] overflow-hidden"
       >
         <p
           data-showcase-legend

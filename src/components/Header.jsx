@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { BouncyLetters } from '@/components/BouncyLetters/BouncyLetters'
 
 const NAV = [
-  { href: '#proyectos', label: 'Proyectos' },
+  { href: '/proyectos', label: 'Proyectos' },
   { href: '/contact', label: 'Contacto' },
 ]
 
@@ -26,7 +26,10 @@ export function Header() {
   const linksRef = useRef([])
   const pathname = usePathname()
   const isHome = pathname === '/'
-  const useDarkHamburger = isHome && heroFrameVisible && !navOpen
+  const isProyectos = pathname === '/proyectos'
+  const useDarkHamburger =
+    (isHome || isProyectos) && heroFrameVisible && !navOpen
+
   const toggleNav = () => {
     const nextNavOpen = !navOpen
     if (nextNavOpen) setMenuVisible(true)
@@ -108,7 +111,7 @@ export function Header() {
   }, [navOpen, menuVisible])
 
   useEffect(() => {
-    if (!isHome) return
+    if (!isHome && !isProyectos) return
 
     const onFrameVisibleChange = (event) => {
       setHeroFrameVisible(Boolean(event.detail?.visible))
@@ -118,7 +121,7 @@ export function Header() {
     return () => {
       window.removeEventListener(HERO_FRAME_VISIBLE_EVENT, onFrameVisibleChange)
     }
-  }, [isHome])
+  }, [isHome, isProyectos])
 
   useEffect(() => {
     if (!navOpen) return
