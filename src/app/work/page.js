@@ -26,7 +26,7 @@ export default function WorkPage() {
           </p>
           <p className="mt-6 text-sm">
             <Link
-              href="/#proyectos"
+              href="/"
               className="font-medium text-primary transition-opacity duration-200 hover:opacity-85"
             >
               Volver a inicio

@@ -535,7 +535,7 @@ export function HomeHero() {
               data-hero-actions
               className="mt-11 flex w-full max-w-2xl flex-wrap items-center gap-3"
             >
-              <MinimalButton href="#proyectos" variant="solid" size="lg">
+              <MinimalButton href="/work" variant="solid" size="lg">
                 Ver proyectos
               </MinimalButton>
               <MinimalButton

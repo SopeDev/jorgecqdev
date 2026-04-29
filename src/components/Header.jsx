@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils'
 import { BouncyLetters } from '@/components/BouncyLetters/BouncyLetters'
 
 const NAV = [
-  { href: '#proyectos', label: 'Proyectos' },
+  { href: '/work', label: 'Proyectos' },
   { href: '/contact', label: 'Contacto' },
 ]
 
