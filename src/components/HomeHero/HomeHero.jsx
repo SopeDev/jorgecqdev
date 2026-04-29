@@ -28,6 +28,13 @@ export function HomeHero() {
     if (!section || !copy) return
 
     const applyScrollLock = () => {
+      /** Skip on narrow viewports — `overflow:hidden` on root can worsen mobile screenshot/scroll quirks. */
+      if (
+        typeof window !== 'undefined' &&
+        window.matchMedia('(max-width: 767px)').matches
+      ) {
+        return
+      }
       if (bodyScrollLocked) return
       bodyScrollLocked = true
       document.documentElement.style.overflow = 'hidden'
