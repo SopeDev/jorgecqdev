@@ -67,11 +67,11 @@ export function HomeHero() {
        * Timeline units: 4 per 100lvh of pin scroll. Example: 1 unit = 25lvh.
        */
       const UNITS_PER_VH = 4
-      /** Narrow screens: halve scrub speed by doubling scroll distance per timeline progress. */
+      /** Narrow screens: slower scrub via extra scroll distance (multiplier on pin end). */
       const mobileScrollSlowFactor = () =>
         typeof window !== 'undefined' &&
         window.matchMedia('(max-width: 767px)').matches
-          ? 2
+          ? 1.5
           : 1
       const SEG_HERO = 4
       const SEG_ENF = 4
