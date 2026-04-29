@@ -55,10 +55,6 @@ export function HomeHero() {
       const focusHeading = section.querySelector('[data-focus-heading-line]')
       const focusTitleParts = section.querySelectorAll('[data-focus-title-part]')
       const focusLines = section.querySelectorAll('[data-focus-line]')
-      const frameTop = section.querySelector('[data-hero-frame-top]')
-      const frameBottom = section.querySelector('[data-hero-frame-bottom]')
-      const frameLeft = section.querySelector('[data-hero-frame-left]')
-      const frameRight = section.querySelector('[data-hero-frame-right]')
       const focusClipRevealEls = [...focusTitleParts].filter(Boolean)
       const titleInDelay = 0.12
       const titleInDuration = 1.2
@@ -67,39 +63,34 @@ export function HomeHero() {
         titleInDelay + titleInDuration + titleInStagger * Math.max(0, titleLines.length - 1) + 0.08
       const indicatorInDelay = paragraphInDelay + 0.7
       /**
-       * Timeline units: 4 per 1vh of pin scroll. Phases: hero out, enfoque label +
-       * canvas, h2 + paragraphs (no dead gap), then 1vh background nodes scatter.
+       * Timeline units: 4 per 100lvh of pin scroll. Example: 1 unit = 25lvh.
        */
       const UNITS_PER_VH = 4
-      const SEG_HERO = 3.6
-      const SEG_ENF = 3.6
+      const SEG_HERO = 4
+      const SEG_ENF = 4
       const T_ENFO = SEG_HERO
       const T_BODY = SEG_HERO + SEG_ENF
       const heroOutStart = 0.1
-      const heroOutDuration = 2.4
-      const heroOutSecondLineDuration = 3
-      const heroOutStagger = 0.5
+      const heroOutDuration = T_ENFO - heroOutStart
+      const heroOutSecondLineDuration = T_ENFO - heroOutStart
+      const heroOutStagger = 0
       const focusHeadingStart = T_ENFO
-      const focusHeadingDuration = 3
+      const focusHeadingDuration = 4
       const focusNodesFadeStart = focusHeadingStart + focusHeadingDuration * 0.5
       const focusNodesFadeDuration = focusHeadingDuration * 0.58
       const focusTitleStart = T_BODY
-      const focusTitleDuration = 0.8
-      const focusTitleStagger = 0.58
-      const focusLinesStart = focusTitleStart + focusTitleDuration + focusTitleStagger + 0.28
-      const focusLinesDuration = 1.1
+      const focusTitleDuration = 1.2
+      const focusTitleStagger = 0.8
+      const focusLinesStart = 10
+      const focusLinesDuration = 2
       const enfoqueSteelInDuration =
         focusLinesStart + focusLinesDuration - focusTitleStart
-      /** Start scatter the frame Enfoque copy finishes (same as paragraph opacity end). */
+      /** Start scatter after Enfoque copy finishes. */
       const paragraphRevealEnd = focusLinesStart + focusLinesDuration
       const scatterPhaseStart = paragraphRevealEnd
-      const scatterPhaseDuration = UNITS_PER_VH
-      /** Enfoque copy + steel: opacity 40% → 80% along scatter scrub. */
-      const enfoqueFadeOutStart = scatterPhaseStart + scatterPhaseDuration * 0.4
-      const enfoqueFadeOutDuration = scatterPhaseDuration * 0.4
-      /** White edge frame: 60% → 100% of scatter (after Enfoque fade begins). */
-      const framePhaseStart = scatterPhaseStart + scatterPhaseDuration * 0.6
-      const framePhaseDuration = scatterPhaseDuration * 0.4
+      const scatterPhaseDuration = 6
+      const enfoqueFadeOutStart = 13
+      const enfoqueFadeOutDuration = 2
       const TIMELINE_UNITS = scatterPhaseStart + scatterPhaseDuration
       const focusNodes = { progress: 0 }
       const nodeScatter = { progress: 0 }
@@ -129,10 +120,6 @@ export function HomeHero() {
         gsap.set(focusNodeLayer, { opacity: 0, filter: 'blur(14px)' })
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
-        if (frameTop) gsap.set(frameTop, { height: 0 })
-        if (frameBottom) gsap.set(frameBottom, { height: 0 })
-        if (frameLeft) gsap.set(frameLeft, { width: 0 })
-        if (frameRight) gsap.set(frameRight, { width: 0 })
         return
       }
 
@@ -143,29 +130,20 @@ export function HomeHero() {
       setNodeFocusProgress(0)
       setNodeScatterProgress(0)
       gsap.set(focusNodeLayer, { opacity: 1, filter: 'blur(0px)' })
-      if (frameTop && frameBottom) {
-        gsap.set(frameTop, { height: 0 })
-        gsap.set(frameBottom, { height: 0 })
-      }
-      if (frameLeft && frameRight) {
-        gsap.set(frameLeft, { width: 0 })
-        gsap.set(frameRight, { width: 0 })
-      }
-
       const heroScrollTl = gsap.timeline({
         scrollTrigger: {
           trigger: section,
           start: 'top top',
           end: () =>
-            `+=${window.innerHeight * (TIMELINE_UNITS / UNITS_PER_VH)}`,
+            `+=${section.offsetHeight * (TIMELINE_UNITS / UNITS_PER_VH)}`,
           pin: true,
           pinType: 'fixed',
           pinSpacing: true,
-          /** `true` = scroll maps 1:1 to timeline (numeric scrub lags behind scroll). */
-          scrub: true,
+          /** Small scrub smoothing keeps scroll-linked motion from feeling mechanically 1:1. */
+          scrub: 0.45,
           anticipatePin: 1,
           invalidateOnRefresh: true,
-          markers: process.env.NODE_ENV === 'development',
+          markers: false,
         },
       })
 
@@ -339,25 +317,6 @@ export function HomeHero() {
         )
       }
 
-      const frameGrowVars = [
-        [frameTop, { height: '15vh' }],
-        [frameBottom, { height: '15vh' }],
-        [frameLeft, { width: '10vw' }],
-        [frameRight, { width: '10vw' }],
-      ]
-      for (const [el, vars] of frameGrowVars) {
-        if (!el) continue
-        heroScrollTl.to(
-          el,
-          {
-            ...vars,
-            duration: framePhaseDuration,
-            ease: 'none',
-          },
-          framePhaseStart
-        )
-      }
-
       const atPageTop = () => window.scrollY <= 2
 
       const setIntroToFinishedState = () => {
@@ -501,29 +460,6 @@ export function HomeHero() {
         className="noise-hero pointer-events-none absolute inset-0 -z-10 opacity-85"
         aria-hidden
       />
-
-      <div
-        className="pointer-events-none absolute inset-0 z-[3]"
-        aria-hidden
-        data-hero-frame
-      >
-        <div
-          data-hero-frame-top
-          className="absolute top-0 right-0 left-0 h-0 w-full bg-white will-change-[height]"
-        />
-        <div
-          data-hero-frame-bottom
-          className="absolute right-0 bottom-0 left-0 h-0 w-full bg-white will-change-[height]"
-        />
-        <div
-          data-hero-frame-left
-          className="absolute top-0 bottom-0 left-0 h-full w-0 bg-white will-change-[width]"
-        />
-        <div
-          data-hero-frame-right
-          className="absolute top-0 right-0 bottom-0 h-full w-0 bg-white will-change-[width]"
-        />
-      </div>
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 py-10 md:py-12">
         <div ref={copyRef} className="relative z-[4] max-w-[72rem]">
