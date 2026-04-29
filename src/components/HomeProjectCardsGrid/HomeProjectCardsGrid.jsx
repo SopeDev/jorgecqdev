@@ -27,7 +27,7 @@ export function HomeProjectCardsGrid() {
               <img
                 src={project.imageSrc}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-[0.18] transition-opacity duration-500 group-hover:opacity-[0.28]"
+                className="absolute inset-0 h-full w-full object-cover opacity-[0.1] transition-opacity duration-500 group-hover:opacity-[0.28]"
               />
             ) : null}
 
