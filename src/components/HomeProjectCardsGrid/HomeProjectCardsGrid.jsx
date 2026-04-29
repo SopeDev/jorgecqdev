@@ -22,21 +22,12 @@ export function HomeProjectCardsGrid() {
             )}
             style={{ backgroundColor: project.brandBg }}
           >
-            <div
-              className="pointer-events-none absolute inset-0 opacity-[0.07]"
-              style={{
-                backgroundImage:
-                  'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35), transparent 55%)',
-              }}
-              aria-hidden
-            />
-
             {!project.cta && project.imageSrc ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={project.imageSrc}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-[0.22] mix-blend-overlay transition-opacity duration-500 group-hover:opacity-[0.38]"
+                className="absolute inset-0 h-full w-full object-cover opacity-[0.18] transition-opacity duration-500 group-hover:opacity-[0.28]"
               />
             ) : null}
 
@@ -49,7 +40,7 @@ export function HomeProjectCardsGrid() {
               </span>
               {!project.cta && (
                 <span className="mt-3 max-w-[11rem] text-center font-mono text-[0.58rem] tracking-[0.22em] text-white/38 uppercase">
-                  {project.client.split(' ')[0]}
+                  {project.label || project.client}
                 </span>
               )}
             </div>
@@ -61,6 +52,13 @@ export function HomeProjectCardsGrid() {
                   ? 'pointer-events-auto opacity-100'
                   : 'pointer-events-none opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100'
               )}
+              style={
+                project.secondary
+                  ? {
+                      backgroundImage: `linear-gradient(to top, ${project.brandBg}F2 0%, ${project.secondary}66 46%, transparent 100%)`,
+                    }
+                  : undefined
+              }
             >
               <p className="font-mono text-[0.62rem] tracking-[0.18em] text-muted-foreground uppercase">
                 {project.cta ? 'Contacto' : project.client}
