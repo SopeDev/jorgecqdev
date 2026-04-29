@@ -101,7 +101,6 @@ export function HomeHero() {
       /** Former frame window: tiles fade/scale in while scatter finishes (15 → 18). */
       const cardsPhaseStart = 15
       const cardsPhaseDuration = 3
-      const TIMELINE_UNITS = scatterPhaseStart + scatterPhaseDuration
       const focusNodes = { progress: 0 }
       const nodeScatter = { progress: 0 }
 
@@ -149,22 +148,7 @@ export function HomeHero() {
         transformOrigin: '50% 58%',
       })
 
-      const heroScrollTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: 'top top',
-          end: () =>
-            `+=${section.offsetHeight * (TIMELINE_UNITS / UNITS_PER_VH) * mobileScrollSlowFactor()}`,
-          pin: true,
-          pinType: 'fixed',
-          pinSpacing: true,
-          /** Small scrub smoothing keeps scroll-linked motion from feeling mechanically 1:1. */
-          scrub: 0.45,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          markers: false,
-        },
-      })
+      const heroScrollTl = gsap.timeline()
 
       heroScrollTl
         .to(
@@ -311,6 +295,7 @@ export function HomeHero() {
             onUpdate: () => {
               setNodeScatterProgress(nodeScatter.progress)
             },
+            onComplete: () => setNodeScatterProgress(1),
           },
           scatterPhaseStart
         )
@@ -352,6 +337,20 @@ export function HomeHero() {
           cardsPhaseStart
         )
       }
+
+      ScrollTrigger.create({
+        animation: heroScrollTl,
+        trigger: section,
+        start: 'top top',
+        end: () =>
+          `+=${section.offsetHeight * (heroScrollTl.duration() / UNITS_PER_VH) * mobileScrollSlowFactor()}`,
+        pin: true,
+        pinType: 'fixed',
+        pinSpacing: true,
+        scrub: 0.45,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+      })
 
       const atPageTop = () => window.scrollY <= 2
 
