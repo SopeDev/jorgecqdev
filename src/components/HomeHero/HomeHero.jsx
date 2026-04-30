@@ -356,7 +356,12 @@ export function HomeHero() {
         pinSpacing: true,
         scrub: 0.45,
         anticipatePin: 1,
-        invalidateOnRefresh: true,
+        /**
+         * `invalidateOnRefresh: true` makes ScrollTrigger call `timeline.revert().invalidate()`
+         * on refresh, which resets scrubbed proxy props (scatter/focus progress) toward 0 and
+         * flashes the canvases mid-scroll — noticeable on mobile when address bar/layout shifts.
+         */
+        invalidateOnRefresh: false,
       })
 
       const atPageTop = () => window.scrollY <= 2
