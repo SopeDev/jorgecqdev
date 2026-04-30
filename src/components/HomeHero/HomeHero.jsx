@@ -110,6 +110,7 @@ export function HomeHero() {
       const cardsPhaseDuration = 3
       const focusNodes = { progress: 0 }
       const nodeScatter = { progress: 0 }
+      const ambientCluster = { progress: 0 }
 
       let lastFocusAttr = '0'
       const setNodeFocusProgress = (value) => {
@@ -120,6 +121,11 @@ export function HomeHero() {
       const setNodeScatterProgress = (value) => {
         if (!systemField) return
         systemField.__nodeScatterProgress = value
+      }
+
+      const setAmbientClusterProgress = (value) => {
+        if (!systemField) return
+        systemField.__ambientClusterProgress = value
       }
 
       if (prefersReduced) {
@@ -138,6 +144,7 @@ export function HomeHero() {
         gsap.set(scrollIndicatorLine, { scaleY: 1 })
         const projectCards = section.querySelectorAll('[data-project-card]')
         gsap.set(projectCards, { opacity: 1, scale: 1 })
+        setAmbientClusterProgress(1)
         return
       }
 
@@ -147,6 +154,7 @@ export function HomeHero() {
       gsap.set(focusLines, { opacity: 0, yPercent: 0 })
       setNodeFocusProgress(0)
       setNodeScatterProgress(0)
+      setAmbientClusterProgress(0)
       gsap.set(focusNodeLayer, { opacity: 1, filter: 'blur(0px)' })
       const projectCards = section.querySelectorAll('[data-project-card]')
       gsap.set(projectCards, {
@@ -154,6 +162,24 @@ export function HomeHero() {
         scale: 0.88,
         transformOrigin: '50% 58%',
       })
+
+      /** Last staggered card finishes around start + amount + duration (random stagger window). */
+      const cardsStaggerAmount =
+        projectCards.length > 0
+          ? Math.min(2.45, cardsPhaseDuration * 0.82)
+          : 0
+      const ambientClusterPhaseStart =
+        cardsPhaseStart + cardsStaggerAmount + cardsPhaseDuration
+      const viewportH =
+        typeof window !== 'undefined'
+          ? window.visualViewport?.height ?? window.innerHeight
+          : 800
+      /** Timeline slice whose scrub span equals ~100vh given pin mapping `UNITS_PER_VH`. */
+      const ambientClusterPhaseDuration = Math.max(
+        0.05,
+        (UNITS_PER_VH * viewportH) /
+          (Math.max(section.offsetHeight, 1) * mobileScrollSlowFactor())
+      )
 
       const heroScrollTl = gsap.timeline()
 
@@ -344,6 +370,18 @@ export function HomeHero() {
           cardsPhaseStart
         )
       }
+
+      heroScrollTl.to(
+        ambientCluster,
+        {
+          progress: 1,
+          duration: ambientClusterPhaseDuration,
+          ease: 'none',
+          onUpdate: () => setAmbientClusterProgress(ambientCluster.progress),
+          onComplete: () => setAmbientClusterProgress(1),
+        },
+        ambientClusterPhaseStart
+      )
 
       ScrollTrigger.create({
         animation: heroScrollTl,

@@ -39,8 +39,14 @@ const FOCUS_TARGET_SELECTOR = '[data-node-focus-target]'
 const FOCUS_PROGRESS_PROP = '__nodeFocusProgress'
 /** 0–1: background grid nodes pushed radially off-canvas (hero sequence). */
 const SCATTER_PROGRESS_PROP = '__nodeScatterProgress'
+/** 0–1: ambient layer nodes gather into clusters (hero tail). */
+const AMBIENT_CLUSTER_PROGRESS_PROP = '__ambientClusterProgress'
+/** Ambient nodes split across this many clusters (desktop = horizontal, mobile = vertical). */
+const AMBIENT_CLUSTER_COUNT = 4
 /** Push distance at progress 1 as a fraction of max(viewport w,h). */
 const SCATTER_EXIT_FR = 1.08
+/** Spread within each ambient cluster vs min(viewport side). */
+const AMBIENT_CLUSTER_SPREAD_FR = 0.09
 
 function initNodes(w, h, nodeCount) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
@@ -90,7 +96,7 @@ function getFocusTargetRect(wrap, target) {
  * Layer modes:
  * - `scatter` — radial push tied to hero scroll (`SCATTER_PROGRESS_PROP` on wrapper)
  * - `focus` — cluster toward `[data-node-focus-target]` (`FOCUS_PROGRESS_PROP`)
- * - `ambient` — drift only (no scroll-driven props)
+ * - `ambient` — drift + optional cluster (`AMBIENT_CLUSTER_PROGRESS_PROP`)
  */
 function NodeLayer({
   layerMode = 'scatter',
@@ -193,6 +199,10 @@ function NodeLayer({
         layerMode === 'scatter'
           ? clamp01(wrap[SCATTER_PROGRESS_PROP] || 0)
           : 0
+      const ambientClusterProgress =
+        layerMode === 'ambient'
+          ? clamp01(wrap[AMBIENT_CLUSTER_PROGRESS_PROP] || 0)
+          : 0
       if (focusProgress > 0 && !focusTargetEl) {
         focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
       }
@@ -227,6 +237,7 @@ function NodeLayer({
 
       const rx = st.rx
       const ry = st.ry
+      const nodesPerAmbientCluster = nodeCount / AMBIENT_CLUSTER_COUNT
       for (let i = 0; i < nodes.length; i++) {
         const n = nodes[i]
         const dx = n.x - mouseX
@@ -236,6 +247,30 @@ function NodeLayer({
         const falloff = influence * influence
         let x = n.x + parallaxX + mr.x * LOCAL_REACT_BOOST_X * falloff
         let y = n.y + parallaxY + mr.y * LOCAL_REACT_BOOST_Y * falloff
+
+        if (ambientClusterProgress > 0 && nodesPerAmbientCluster >= 1) {
+          const bundle = Math.min(
+            AMBIENT_CLUSTER_COUNT - 1,
+            Math.floor(i / nodesPerAmbientCluster)
+          )
+          const isDesktop =
+            typeof window !== 'undefined' &&
+            window.matchMedia('(min-width: 768px)').matches
+          const spread = Math.min(w, h) * AMBIENT_CLUSTER_SPREAD_FR
+          let tcx
+          let tcy
+          if (isDesktop) {
+            tcx = ((bundle + 0.5) / AMBIENT_CLUSTER_COUNT) * w
+            tcy = h * 0.5
+          } else {
+            tcx = w * 0.5
+            tcy = ((bundle + 0.5) / AMBIENT_CLUSTER_COUNT) * h
+          }
+          const targetX = tcx + (n.focusX - 0.5) * spread * 2.25
+          const targetY = tcy + (n.focusY - 0.5) * spread * 2.25
+          x += (targetX - x) * ambientClusterProgress
+          y += (targetY - y) * ambientClusterProgress
+        }
 
         if (focusRect) {
           const targetX = focusRect.x + focusRect.w * n.focusX
