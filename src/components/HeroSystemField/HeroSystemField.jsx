@@ -51,6 +51,10 @@ const AMBIENT_CLUSTER_SPREAD_FR = 0.09
 const AMBIENT_CLUSTER_BLEND_CAP_FR = 0.93
 /** Slow orbital jitter vs min(viewport side); amplitude scales with cluster progress. */
 const AMBIENT_CLUSTER_DRIFT_FR = 0.013
+/** Stroke alpha multiplier for adjacent-cluster bridge edges (scaled by cluster progress). */
+const AMBIENT_BRIDGE_ALPHA_FR = 0.62
+/** Nodes per bridge endpoint between cluster K and K+1. */
+const AMBIENT_BRIDGE_PER_CLUSTER = 3
 
 function initNodes(w, h, nodeCount) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
@@ -94,6 +98,42 @@ function getFocusTargetRect(wrap, target) {
     w: targetRect.width,
     h: targetRect.height,
   }
+}
+
+/** Cluster anchor positions — must stay aligned with ambient clustering math. */
+function getAmbientClusterAnchors(w, h, isDesktop) {
+  const anchors = []
+  for (let bundle = 0; bundle < AMBIENT_CLUSTER_COUNT; bundle++) {
+    if (isDesktop) {
+      anchors.push({
+        x: ((bundle + 0.5) / AMBIENT_CLUSTER_COUNT) * w,
+        y: h * 0.5,
+      })
+    } else {
+      anchors.push({
+        x: w * 0.5,
+        y: ((bundle + 0.5) / AMBIENT_CLUSTER_COUNT) * h,
+      })
+    }
+  }
+  return anchors
+}
+
+/** Closest `count` indices in `[bundleBase, bundleBase + npc)` to `(cx, cy)`, nearest first. */
+function pickClosestNodesInBundle(rx, ry, bundleBase, npc, cx, cy, count) {
+  const scored = []
+  for (let k = 0; k < npc; k++) {
+    const i = bundleBase + k
+    scored.push({
+      i,
+      d2: dist2(rx[i], ry[i], cx, cy),
+    })
+  }
+  scored.sort((a, b) => a.d2 - b.d2)
+  const take = Math.min(count, scored.length)
+  const out = []
+  for (let k = 0; k < take; k++) out.push(scored[k].i)
+  return out
 }
 
 /**
@@ -371,6 +411,60 @@ function NodeLayer({
               ctx.lineTo(brx, bry)
               ctx.stroke()
             }
+          }
+        }
+      }
+
+      if (
+        layerMode === 'ambient' &&
+        ambientClusterProgress > 0 &&
+        nodesPerAmbientCluster >= 1 &&
+        nodes.length >= AMBIENT_CLUSTER_COUNT * nodesPerAmbientCluster
+      ) {
+        const isDesktop =
+          typeof window !== 'undefined' &&
+          window.matchMedia('(min-width: 768px)').matches
+        const anchors = getAmbientClusterAnchors(w, h, isDesktop)
+        const npc = nodesPerAmbientCluster
+        const bridgePulse =
+          0.84 +
+          0.16 *
+            Math.sin(t * 0.52 + (ambientClusterProgress * Math.PI) / 2)
+        const bridgeAlpha =
+          LINE_ALPHA_MAX *
+          AMBIENT_BRIDGE_ALPHA_FR *
+          ambientClusterProgress *
+          bridgePulse
+        ctx.strokeStyle = `rgba(255,255,255,${bridgeAlpha})`
+        for (let b = 0; b < AMBIENT_CLUSTER_COUNT - 1; b++) {
+          const baseA = b * npc
+          const baseB = (b + 1) * npc
+          const fromA = pickClosestNodesInBundle(
+            rx,
+            ry,
+            baseA,
+            npc,
+            anchors[b + 1].x,
+            anchors[b + 1].y,
+            AMBIENT_BRIDGE_PER_CLUSTER
+          )
+          const fromB = pickClosestNodesInBundle(
+            rx,
+            ry,
+            baseB,
+            npc,
+            anchors[b].x,
+            anchors[b].y,
+            AMBIENT_BRIDGE_PER_CLUSTER
+          )
+          const pairs = Math.min(fromA.length, fromB.length)
+          for (let k = 0; k < pairs; k++) {
+            const ia = fromA[k]
+            const ib = fromB[k]
+            ctx.beginPath()
+            ctx.moveTo(rx[ia], ry[ia])
+            ctx.lineTo(rx[ib], ry[ib])
+            ctx.stroke()
           }
         }
       }
