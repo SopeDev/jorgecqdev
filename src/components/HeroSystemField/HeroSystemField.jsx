@@ -47,6 +47,10 @@ const AMBIENT_CLUSTER_COUNT = 4
 const SCATTER_EXIT_FR = 1.08
 /** Spread within each ambient cluster vs min(viewport side). */
 const AMBIENT_CLUSTER_SPREAD_FR = 0.09
+/** Cap blend toward cluster center so underlying drift stays faintly visible when clustered. */
+const AMBIENT_CLUSTER_BLEND_CAP_FR = 0.93
+/** Slow orbital jitter vs min(viewport side); amplitude scales with cluster progress. */
+const AMBIENT_CLUSTER_DRIFT_FR = 0.013
 
 function initNodes(w, h, nodeCount) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
@@ -268,8 +272,17 @@ function NodeLayer({
           }
           const targetX = tcx + (n.focusX - 0.5) * spread * 2.25
           const targetY = tcy + (n.focusY - 0.5) * spread * 2.25
-          x += (targetX - x) * ambientClusterProgress
-          y += (targetY - y) * ambientClusterProgress
+          const clusterPull =
+            ambientClusterProgress * AMBIENT_CLUSTER_BLEND_CAP_FR
+          x += (targetX - x) * clusterPull
+          y += (targetY - y) * clusterPull
+          const driftAmp =
+            ambientClusterProgress *
+            Math.min(w, h) *
+            AMBIENT_CLUSTER_DRIFT_FR
+          x += Math.sin(t * 0.89 + n.phase * 2.13) * driftAmp
+          y +=
+            Math.cos(t * 0.74 + n.phase * 1.77) * driftAmp * 0.91
         }
 
         if (focusRect) {
