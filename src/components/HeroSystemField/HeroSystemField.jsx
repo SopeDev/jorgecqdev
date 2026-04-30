@@ -4,8 +4,10 @@ import { useRef, useEffect } from 'react'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { cn } from '@/lib/utils'
 
-/** Node count for each hero field canvas (background, focus, post-grid). */
-export const HERO_FIELD_NODE_COUNT = 30
+/** Node counts per layered canvas (see `HeroSystemField`). */
+export const HERO_FIELD_FOCUS_NODE_COUNT = 30
+export const HERO_FIELD_SCATTER_NODE_COUNT = 30
+export const HERO_FIELD_AMBIENT_NODE_COUNT = 40
 
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
@@ -84,8 +86,16 @@ function getFocusTargetRect(wrap, target) {
   }
 }
 
-/** `background`: scatter-driven; `focus`: focus-cluster + fade sibling; `postGrid`: reserved for hero tail (no scatter/focus). */
-function NodeLayer({ layerMode = 'background', nodeCount = HERO_FIELD_NODE_COUNT }) {
+/**
+ * Layer modes:
+ * - `scatter` — radial push tied to hero scroll (`SCATTER_PROGRESS_PROP` on wrapper)
+ * - `focus` — cluster toward `[data-node-focus-target]` (`FOCUS_PROGRESS_PROP`)
+ * - `ambient` — drift only (no scroll-driven props)
+ */
+function NodeLayer({
+  layerMode = 'scatter',
+  nodeCount = HERO_FIELD_SCATTER_NODE_COUNT,
+}) {
   const canvasRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
   const mouseRef = useRef({ x: 0, y: 0, tx: 0, ty: 0 })
@@ -180,7 +190,7 @@ function NodeLayer({ layerMode = 'background', nodeCount = HERO_FIELD_NODE_COUNT
       const focusProgress =
         layerMode === 'focus' ? clamp01(wrap[FOCUS_PROGRESS_PROP] || 0) : 0
       const scatterProgress =
-        layerMode === 'background'
+        layerMode === 'scatter'
           ? clamp01(wrap[SCATTER_PROGRESS_PROP] || 0)
           : 0
       if (focusProgress > 0 && !focusTargetEl) {
@@ -413,12 +423,12 @@ function NodeLayer({ layerMode = 'background', nodeCount = HERO_FIELD_NODE_COUNT
     <canvas
       ref={canvasRef}
       data-hero-focus-node-layer={layerMode === 'focus' ? '' : undefined}
-      data-hero-post-grid-field={layerMode === 'postGrid' ? '' : undefined}
+      data-hero-ambient-field={layerMode === 'ambient' ? '' : undefined}
       className={cn(
         'absolute inset-0 h-full w-full [contain:paint]',
-        layerMode === 'background' && 'z-0 opacity-[0.6]',
+        layerMode === 'scatter' && 'z-0 opacity-[0.6]',
         layerMode === 'focus' && 'z-[1] opacity-[0.6] will-change-[opacity,filter]',
-        layerMode === 'postGrid' && 'z-[2] opacity-0'
+        layerMode === 'ambient' && 'z-[2] opacity-[0.6]'
       )}
     />
   )
@@ -434,9 +444,9 @@ export function HeroSystemField({ className, ...props }) {
       {...props}
       aria-hidden
     >
-      <NodeLayer layerMode="background" nodeCount={HERO_FIELD_NODE_COUNT} />
-      <NodeLayer layerMode="focus" nodeCount={HERO_FIELD_NODE_COUNT} />
-      <NodeLayer layerMode="postGrid" nodeCount={HERO_FIELD_NODE_COUNT} />
+      <NodeLayer layerMode="scatter" nodeCount={HERO_FIELD_SCATTER_NODE_COUNT} />
+      <NodeLayer layerMode="focus" nodeCount={HERO_FIELD_FOCUS_NODE_COUNT} />
+      <NodeLayer layerMode="ambient" nodeCount={HERO_FIELD_AMBIENT_NODE_COUNT} />
     </div>
   )
 }
