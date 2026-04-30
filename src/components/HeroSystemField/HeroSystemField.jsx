@@ -46,7 +46,7 @@ const AMBIENT_CLUSTER_COUNT = 4
 /** Push distance at progress 1 as a fraction of max(viewport w,h). */
 const SCATTER_EXIT_FR = 1.08
 /** Spread within each ambient cluster vs min(viewport side). */
-const AMBIENT_CLUSTER_SPREAD_FR = 0.09
+const AMBIENT_CLUSTER_SPREAD_FR = 0.118
 /** Cap blend toward cluster center so underlying drift stays faintly visible when clustered. */
 const AMBIENT_CLUSTER_BLEND_CAP_FR = 0.93
 /** Slow orbital jitter vs min(viewport side); amplitude scales with cluster progress. */
