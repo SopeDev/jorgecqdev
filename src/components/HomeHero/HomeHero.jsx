@@ -374,10 +374,15 @@ export function HomeHero() {
         gsap.set(scrollIndicatorLine, { scaleY: 1, transformOrigin: 'top center' })
       }
 
+      const invalidatePinnedHeroBaseline = () => {
+        heroScrollTl.invalidate()
+      }
+
       const introTl = gsap.timeline({
         paused: true,
         onComplete: () => {
           introSettled = true
+          invalidatePinnedHeroBaseline()
           releaseScrollLock()
         },
       })
@@ -388,6 +393,7 @@ export function HomeHero() {
         releaseScrollLock()
         introTl.progress(1).kill()
         setIntroToFinishedState()
+        invalidatePinnedHeroBaseline()
         ScrollTrigger.refresh()
       }
 
@@ -399,6 +405,7 @@ export function HomeHero() {
         gsap.set(scrollIndicatorLine, { scaleY: 0.2, transformOrigin: 'top center' })
       } else {
         setIntroToFinishedState()
+        invalidatePinnedHeroBaseline()
         ScrollTrigger.refresh()
       }
 
