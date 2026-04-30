@@ -383,6 +383,21 @@ export function HomeHero() {
         ambientClusterPhaseStart
       )
 
+      if (projectCards.length) {
+        const ambientGridFadeStart =
+          ambientClusterPhaseStart + ambientClusterPhaseDuration * 0.5
+        const ambientGridFadeDuration = ambientClusterPhaseDuration * 0.5
+        heroScrollTl.to(
+          projectCards,
+          {
+            opacity: 0,
+            duration: ambientGridFadeDuration,
+            ease: 'none',
+          },
+          ambientGridFadeStart
+        )
+      }
+
       ScrollTrigger.create({
         animation: heroScrollTl,
         trigger: section,
