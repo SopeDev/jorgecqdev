@@ -54,7 +54,7 @@ const AMBIENT_CLUSTER_DRIFT_FR = 0.013
 /** Stroke alpha multiplier for adjacent-cluster bridge edges (scaled by cluster progress). */
 const AMBIENT_BRIDGE_ALPHA_FR = 0.62
 /** Nodes per bridge endpoint between cluster K and K+1. */
-const AMBIENT_BRIDGE_PER_CLUSTER = 3
+const AMBIENT_BRIDGE_PER_CLUSTER = 1
 
 function initNodes(w, h, nodeCount) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
