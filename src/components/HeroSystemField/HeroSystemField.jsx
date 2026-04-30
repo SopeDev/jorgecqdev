@@ -4,10 +4,8 @@ import { useRef, useEffect } from 'react'
 import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { cn } from '@/lib/utils'
 
-/** Default nodes per hero layer (caller passes explicit counts). */
-export const BG_FIELD_NODE_COUNT = 30
-export const FOCUS_FIELD_NODE_COUNT = 30
-export const POST_GRID_FIELD_NODE_COUNT = 40
+/** Node count for each hero field canvas (background, focus, post-grid). */
+export const HERO_FIELD_NODE_COUNT = 30
 
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
@@ -87,7 +85,7 @@ function getFocusTargetRect(wrap, target) {
 }
 
 /** `background`: scatter-driven; `focus`: focus-cluster + fade sibling; `postGrid`: reserved for hero tail (no scatter/focus). */
-function NodeLayer({ layerMode = 'background', nodeCount = BG_FIELD_NODE_COUNT }) {
+function NodeLayer({ layerMode = 'background', nodeCount = HERO_FIELD_NODE_COUNT }) {
   const canvasRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
   const mouseRef = useRef({ x: 0, y: 0, tx: 0, ty: 0 })
@@ -436,9 +434,9 @@ export function HeroSystemField({ className, ...props }) {
       {...props}
       aria-hidden
     >
-      <NodeLayer layerMode="background" nodeCount={BG_FIELD_NODE_COUNT} />
-      <NodeLayer layerMode="focus" nodeCount={FOCUS_FIELD_NODE_COUNT} />
-      <NodeLayer layerMode="postGrid" nodeCount={POST_GRID_FIELD_NODE_COUNT} />
+      <NodeLayer layerMode="background" nodeCount={HERO_FIELD_NODE_COUNT} />
+      <NodeLayer layerMode="focus" nodeCount={HERO_FIELD_NODE_COUNT} />
+      <NodeLayer layerMode="postGrid" nodeCount={HERO_FIELD_NODE_COUNT} />
     </div>
   )
 }
