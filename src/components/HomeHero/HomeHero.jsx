@@ -547,7 +547,7 @@ export function HomeHero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative isolate flex min-h-[100svh] flex-col overflow-hidden border-b border-border bg-background"
+      className="relative isolate flex min-h-[100vh] flex-col overflow-hidden border-b border-border bg-background"
       aria-labelledby="hero-heading"
       data-hero-section
     >
