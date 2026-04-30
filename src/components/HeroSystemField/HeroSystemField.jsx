@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 /** Node counts per layered canvas (see `HeroSystemField`). */
 export const HERO_FIELD_FOCUS_NODE_COUNT = 30
 export const HERO_FIELD_SCATTER_NODE_COUNT = 30
-export const HERO_FIELD_AMBIENT_NODE_COUNT = 40
+export const HERO_FIELD_AMBIENT_NODE_COUNT = 80
 
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
@@ -29,6 +29,7 @@ const BOUNCE_MARGIN_FR = 0.014
 const TARGET_FPS = 30
 const FRAME_TIME = 1000 / TARGET_FPS
 const LINK_DISTANCE_FR = 0.34
+const AMBIENT_LINK_DISTANCE_FR = 0.20
 const MOUSE_LERP = 0.08
 const MOUSE_PARALLAX_X = 24
 const MOUSE_PARALLAX_Y = 17
@@ -41,12 +42,17 @@ const FOCUS_PROGRESS_PROP = '__nodeFocusProgress'
 const SCATTER_PROGRESS_PROP = '__nodeScatterProgress'
 /** 0–1: ambient layer nodes gather into clusters (hero tail). */
 const AMBIENT_CLUSTER_PROGRESS_PROP = '__ambientClusterProgress'
+/** 0–4: each full unit tints one ambient cluster to teal. */
+const AMBIENT_STEP_PROGRESS_PROP = '__ambientStepProgress'
 /** Ambient nodes split across this many clusters (desktop = horizontal, mobile = vertical). */
 const AMBIENT_CLUSTER_COUNT = 4
+const AMBIENT_TEAL_RGB = { r: 87, g: 191, b: 190 }
+/** Additional glow/fill intensity once ambient clusters are teal. */
+const AMBIENT_TEAL_BRIGHTNESS_FR = 1
 /** Push distance at progress 1 as a fraction of max(viewport w,h). */
 const SCATTER_EXIT_FR = 1.08
 /** Spread within each ambient cluster vs min(viewport side). */
-const AMBIENT_CLUSTER_SPREAD_FR = 0.118
+const AMBIENT_CLUSTER_SPREAD_FR = 0.08
 /** Cap blend toward cluster center so underlying drift stays faintly visible when clustered. */
 const AMBIENT_CLUSTER_BLEND_CAP_FR = 0.93
 /** Slow orbital jitter vs min(viewport side); amplitude scales with cluster progress. */
@@ -54,7 +60,7 @@ const AMBIENT_CLUSTER_DRIFT_FR = 0.013
 /** Stroke alpha multiplier for adjacent-cluster bridge edges (scaled by cluster progress). */
 const AMBIENT_BRIDGE_ALPHA_FR = 0.62
 /** Nodes per bridge endpoint between cluster K and K+1. */
-const AMBIENT_BRIDGE_PER_CLUSTER = 1
+const AMBIENT_BRIDGE_PER_CLUSTER = 2
 
 function initNodes(w, h, nodeCount) {
   const pad = Math.min(w, h) * SPAWN_PAD_FR
@@ -145,6 +151,7 @@ function pickClosestNodesInBundle(rx, ry, bundleBase, npc, cx, cy, count) {
 function NodeLayer({
   layerMode = 'scatter',
   nodeCount = HERO_FIELD_SCATTER_NODE_COUNT,
+  linkDistanceFr = LINK_DISTANCE_FR,
 }) {
   const canvasRef = useRef(null)
   const { prefersReduced } = useMotionSafe()
@@ -247,6 +254,10 @@ function NodeLayer({
         layerMode === 'ambient'
           ? clamp01(wrap[AMBIENT_CLUSTER_PROGRESS_PROP] || 0)
           : 0
+      const ambientStepProgress =
+        layerMode === 'ambient'
+          ? Math.max(0, Math.min(AMBIENT_CLUSTER_COUNT, Number(wrap[AMBIENT_STEP_PROGRESS_PROP] || 0)))
+          : 0
       if (focusProgress > 0 && !focusTargetEl) {
         focusTargetEl = document.querySelector(FOCUS_TARGET_SELECTOR)
       }
@@ -264,7 +275,7 @@ function NodeLayer({
       const localRadius = Math.min(w, h) * LOCAL_REACT_RADIUS_FR
 
       const t = timeMs * 0.001
-      const maxD = Math.min(w, h) * LINK_DISTANCE_FR
+      const maxD = Math.min(w, h) * linkDistanceFr
       const maxD2 = maxD * maxD
       const cellSize = maxD * 0.5
       const ncx = Math.max(1, Math.ceil(w / cellSize) + 1)
@@ -405,7 +416,25 @@ function NodeLayer({
                 )
               const alpha =
                 LINE_ALPHA_MAX * linkFall * linkFall * flicker * linkDepth
-              ctx.strokeStyle = `rgba(255,255,255,${alpha})`
+              if (layerMode === 'ambient' && nodesPerAmbientCluster >= 1) {
+                const bundleA = Math.min(
+                  AMBIENT_CLUSTER_COUNT - 1,
+                  Math.floor(i / nodesPerAmbientCluster)
+                )
+                const bundleB = Math.min(
+                  AMBIENT_CLUSTER_COUNT - 1,
+                  Math.floor(j / nodesPerAmbientCluster)
+                )
+                const tealMixA = clamp01(ambientStepProgress - bundleA)
+                const tealMixB = clamp01(ambientStepProgress - bundleB)
+                const tealMix = (tealMixA + tealMixB) * 0.5
+                const r = Math.round(255 + (AMBIENT_TEAL_RGB.r - 255) * tealMix)
+                const g = Math.round(255 + (AMBIENT_TEAL_RGB.g - 255) * tealMix)
+                const b = Math.round(255 + (AMBIENT_TEAL_RGB.b - 255) * tealMix)
+                ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`
+              } else {
+                ctx.strokeStyle = `rgba(255,255,255,${alpha})`
+              }
               ctx.beginPath()
               ctx.moveTo(arx, ary)
               ctx.lineTo(brx, bry)
@@ -473,6 +502,7 @@ function NodeLayer({
         const n = nodes[i]
         const nx = rx[i]
         const ny = ry[i]
+        let ambientTealMix = 0
         const breathe = 0.88 + 0.12 * Math.sin(t * 0.9 + n.phase)
         const intensity =
           DEPTH_INTENSITY_MIN_FR + (1 - DEPTH_INTENSITY_MIN_FR) * n.depth
@@ -481,12 +511,27 @@ function NodeLayer({
           (DEPTH_RADIUS_MIN_FR + (1 - DEPTH_RADIUS_MIN_FR) * n.depth)
         const depthBlur = 0.5 + 0.5 * n.depth
         const outerR = radius * (GLOW_OUTER_R_FR * 0.85 + 0.15 * depthBlur)
-        ctx.fillStyle = '#fff'
-        ctx.globalAlpha = NODE_GLOW_ALPHA * breathe * intensity
+        if (layerMode === 'ambient' && nodesPerAmbientCluster >= 1) {
+          const bundle = Math.min(
+            AMBIENT_CLUSTER_COUNT - 1,
+            Math.floor(i / nodesPerAmbientCluster)
+          )
+          const tealMix = clamp01(ambientStepProgress - bundle)
+          ambientTealMix = tealMix
+          const r = Math.round(255 + (AMBIENT_TEAL_RGB.r - 255) * tealMix)
+          const g = Math.round(255 + (AMBIENT_TEAL_RGB.g - 255) * tealMix)
+          const b = Math.round(255 + (AMBIENT_TEAL_RGB.b - 255) * tealMix)
+          ctx.fillStyle = `rgb(${r} ${g} ${b})`
+        } else {
+          ctx.fillStyle = '#fff'
+        }
+        const brightnessBoost =
+          1 + ambientTealMix * AMBIENT_TEAL_BRIGHTNESS_FR
+        ctx.globalAlpha = NODE_GLOW_ALPHA * breathe * intensity * brightnessBoost
         ctx.beginPath()
         ctx.arc(nx, ny, outerR, 0, Math.PI * 2)
         ctx.fill()
-        ctx.globalAlpha = NODE_ALPHA * breathe * intensity
+        ctx.globalAlpha = NODE_ALPHA * breathe * intensity * brightnessBoost
         ctx.beginPath()
         ctx.arc(nx, ny, radius, 0, Math.PI * 2)
         ctx.fill()
@@ -559,7 +604,7 @@ function NodeLayer({
       io.disconnect()
       window.removeEventListener('mousemove', onMove)
     }
-  }, [layerMode, nodeCount, prefersReduced])
+  }, [layerMode, linkDistanceFr, nodeCount, prefersReduced])
 
   return (
     <canvas
@@ -588,7 +633,11 @@ export function HeroSystemField({ className, ...props }) {
     >
       <NodeLayer layerMode="scatter" nodeCount={HERO_FIELD_SCATTER_NODE_COUNT} />
       <NodeLayer layerMode="focus" nodeCount={HERO_FIELD_FOCUS_NODE_COUNT} />
-      <NodeLayer layerMode="ambient" nodeCount={HERO_FIELD_AMBIENT_NODE_COUNT} />
+      <NodeLayer
+        layerMode="ambient"
+        nodeCount={HERO_FIELD_AMBIENT_NODE_COUNT}
+        linkDistanceFr={AMBIENT_LINK_DISTANCE_FR}
+      />
     </div>
   )
 }

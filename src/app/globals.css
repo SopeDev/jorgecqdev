@@ -68,9 +68,6 @@
   --surface-recess: #0e0e11;
   --surface-deeper: #09090a;
   --surface-emphasis: #0e0e12;
-  /* Cool steel tones — large fields / diagram context only */
-  --steel-muted: #101318;
-  --steel-field: rgba(87, 191, 190, 0.1);
   /* Diagram / rail lines (orthogonal system graphics) */
   --line-subtle: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.14);
@@ -133,8 +130,6 @@
   --color-surface-recess: var(--surface-recess);
   --color-surface-deeper: var(--surface-deeper);
   --color-surface-emphasis: var(--surface-emphasis);
-  --color-steel-muted: var(--steel-muted);
-  --color-steel-field: var(--steel-field);
   --color-line-subtle: var(--line-subtle);
   --color-line-strong: var(--line-strong);
   --color-line-diagram: var(--line-diagram);
@@ -205,22 +200,6 @@
       rgba(255, 255, 255, 0.065) 0%,
       transparent 58%
     );
-  }
-  .field-radial-steel {
-    background-image: radial-gradient(
-      ellipse 60% 60% at 37.5% 50%,
-      var(--steel-field) 0%,
-      transparent 30%
-    );
-  }
-  @media (max-width: 767px) {
-    .field-radial-steel {
-      background-image: radial-gradient(
-        ellipse 92% 58% at 50% 50%,
-        var(--steel-field) 0%,
-        transparent 50%
-      );
-    }
   }
   .border-line-diagram {
     border-color: var(--line-diagram);

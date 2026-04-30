@@ -53,8 +53,6 @@ export function HomeHero() {
       const titleLines = copy.querySelectorAll('[data-hero-title-line]')
       const paragraph = copy.querySelector('[data-hero-paragraph]')
       const actions = copy.querySelector('[data-hero-actions]')
-      const steelField = section.querySelector('[data-hero-steel-field]')
-      const enfoqueSteelField = section.querySelector('[data-enfoque-steel-field]')
       const systemField = section.querySelector('[data-hero-system-field]')
       const focusNodeLayer = section.querySelector('[data-hero-focus-node-layer]')
       const scrollIndicator = section.querySelector('[data-hero-scroll-indicator]')
@@ -63,6 +61,10 @@ export function HomeHero() {
       const focusHeading = section.querySelector('[data-focus-heading-line]')
       const focusTitleParts = section.querySelectorAll('[data-focus-title-part]')
       const focusLines = section.querySelectorAll('[data-focus-line]')
+      const howWorkBlock = section.querySelector('[data-how-work-block]')
+      const howWorkLegend = section.querySelector('[data-how-work-legend]')
+      const howWorkLines = section.querySelectorAll('[data-how-work-line]')
+      const howWorkSteps = section.querySelectorAll('[data-how-work-step]')
       const focusClipRevealEls = [...focusTitleParts].filter(Boolean)
       const titleInDelay = 0.12
       const titleInDuration = 1.2
@@ -82,8 +84,10 @@ export function HomeHero() {
           : 1
       const SEG_HERO = 4
       const SEG_ENF = 4
+      /** 25vh gap between "Mi enfoque" header and Enfoque title reveal. */
+      const ENFOQUE_HEADER_GAP = 1
       const T_ENFO = SEG_HERO
-      const T_BODY = SEG_HERO + SEG_ENF
+      const T_BODY = SEG_HERO + SEG_ENF + ENFOQUE_HEADER_GAP
       const heroOutStart = 0.1
       const heroOutDuration = T_ENFO - heroOutStart
       const heroOutSecondLineDuration = T_ENFO - heroOutStart
@@ -95,18 +99,17 @@ export function HomeHero() {
       const focusTitleStart = T_BODY
       const focusTitleDuration = 1.2
       const focusTitleStagger = 0.8
-      const focusLinesStart = 10
+      const focusLinesStart =
+        focusTitleStart + focusTitleDuration + focusTitleStagger + 0.28
       const focusLinesDuration = 2
-      const enfoqueSteelInDuration =
-        focusLinesStart + focusLinesDuration - focusTitleStart
       /** Start scatter after Enfoque copy finishes. */
       const paragraphRevealEnd = focusLinesStart + focusLinesDuration
       const scatterPhaseStart = paragraphRevealEnd
       const scatterPhaseDuration = 6
-      const enfoqueFadeOutStart = 13
+      const enfoqueFadeOutStart = scatterPhaseStart + 1
       const enfoqueFadeOutDuration = 2
       /** Former frame window: tiles fade/scale in while scatter finishes (15 → 18). */
-      const cardsPhaseStart = 15
+      const cardsPhaseStart = scatterPhaseStart + 3
       const cardsPhaseDuration = 3
       const focusNodes = { progress: 0 }
       const nodeScatter = { progress: 0 }
@@ -128,6 +131,11 @@ export function HomeHero() {
         systemField.__ambientClusterProgress = value
       }
 
+      const setAmbientStepProgress = (value) => {
+        if (!systemField) return
+        systemField.__ambientStepProgress = value
+      }
+
       if (prefersReduced) {
         gsap.set(titleLines, { yPercent: 0 })
         gsap.set(paragraph, { opacity: 1 })
@@ -136,7 +144,6 @@ export function HomeHero() {
         gsap.set(focusHeading, { opacity: 1, filter: 'blur(0px)' })
         gsap.set(focusClipRevealEls, { yPercent: 0 })
         gsap.set(focusLines, { opacity: 1 })
-        if (enfoqueSteelField) gsap.set(enfoqueSteelField, { opacity: 1 })
         setNodeFocusProgress(1)
         lastFocusAttr = '1'
         gsap.set(focusNodeLayer, { opacity: 0, filter: 'blur(14px)' })
@@ -145,17 +152,26 @@ export function HomeHero() {
         const projectCards = section.querySelectorAll('[data-project-card]')
         gsap.set(projectCards, { opacity: 1, scale: 1 })
         setAmbientClusterProgress(1)
+        setAmbientStepProgress(4)
+        gsap.set(howWorkBlock, { opacity: 1 })
+        gsap.set(howWorkLegend, { opacity: 1, yPercent: 0 })
+        gsap.set(howWorkLines, { opacity: 1, yPercent: 0 })
+        gsap.set(howWorkSteps, { opacity: 1, yPercent: 0 })
         return
       }
 
-      if (enfoqueSteelField) gsap.set(enfoqueSteelField, { opacity: 0 })
       gsap.set(focusHeading, { opacity: 0, filter: 'blur(50px)' })
       gsap.set(focusClipRevealEls, { yPercent: 112 })
       gsap.set(focusLines, { opacity: 0, yPercent: 0 })
       setNodeFocusProgress(0)
       setNodeScatterProgress(0)
       setAmbientClusterProgress(0)
+      setAmbientStepProgress(0)
       gsap.set(focusNodeLayer, { opacity: 1, filter: 'blur(0px)' })
+      gsap.set(howWorkBlock, { opacity: 0 })
+      gsap.set(howWorkLegend, { opacity: 0, yPercent: 24 })
+      gsap.set(howWorkLines, { opacity: 0, yPercent: 24 })
+      gsap.set(howWorkSteps, { opacity: 0, yPercent: 24 })
       const projectCards = section.querySelectorAll('[data-project-card]')
       gsap.set(projectCards, {
         opacity: 0,
@@ -180,6 +196,15 @@ export function HomeHero() {
         (UNITS_PER_VH * viewportH) /
           (Math.max(section.offsetHeight, 1) * mobileScrollSlowFactor())
       )
+      /** Gap after project cards fully fade: 25vh worth of scroll. */
+      const howWorkGapDuration = ambientClusterPhaseDuration * 0.25
+      const howWorkPhaseStart =
+        ambientClusterPhaseStart + ambientClusterPhaseDuration + howWorkGapDuration
+      /** Requested: title/intro reveal now takes 50vh worth of scroll. */
+      const howWorkPhaseDuration = ambientClusterPhaseDuration * 0.5
+      const howWorkStepsStart = howWorkPhaseStart + howWorkPhaseDuration
+      /** Each step now spans 50vh of scroll. */
+      const howWorkStepDuration = ambientClusterPhaseDuration * 0.5
 
       const heroScrollTl = gsap.timeline()
 
@@ -215,15 +240,6 @@ export function HomeHero() {
         )
         .to(
           actions,
-          {
-            opacity: 0,
-            duration: heroOutDuration,
-            ease: 'none',
-          },
-          heroOutStart
-        )
-        .to(
-          steelField,
           {
             opacity: 0,
             duration: heroOutDuration,
@@ -296,18 +312,6 @@ export function HomeHero() {
           focusTitleStart
         )
 
-      if (enfoqueSteelField) {
-        heroScrollTl.to(
-          enfoqueSteelField,
-          {
-            opacity: 1,
-            duration: enfoqueSteelInDuration,
-            ease: 'power2.out',
-          },
-          focusTitleStart
-        )
-      }
-
       heroScrollTl
         .to(
           focusLines,
@@ -342,18 +346,6 @@ export function HomeHero() {
           enfoqueFadeOutStart
         )
 
-      if (enfoqueSteelField) {
-        heroScrollTl.to(
-          enfoqueSteelField,
-          {
-            opacity: 0,
-            duration: enfoqueFadeOutDuration,
-            ease: 'none',
-          },
-          enfoqueFadeOutStart
-        )
-      }
-
       if (projectCards.length) {
         heroScrollTl.to(
           projectCards,
@@ -376,12 +368,69 @@ export function HomeHero() {
         {
           progress: 1,
           duration: ambientClusterPhaseDuration,
-          ease: 'none',
+          ease: 'sine.inOut',
           onUpdate: () => setAmbientClusterProgress(ambientCluster.progress),
           onComplete: () => setAmbientClusterProgress(1),
         },
         ambientClusterPhaseStart
       )
+      heroScrollTl
+        .to(
+          howWorkBlock,
+          {
+            opacity: 1,
+            duration: howWorkPhaseDuration,
+            ease: 'none',
+          },
+          howWorkPhaseStart
+        )
+        .to(
+          howWorkLegend,
+          {
+            opacity: 1,
+            yPercent: 0,
+            duration: howWorkPhaseDuration,
+            ease: 'none',
+          },
+          howWorkPhaseStart
+        )
+        .to(
+          howWorkLines,
+          {
+            opacity: 1,
+            yPercent: 0,
+            duration: howWorkPhaseDuration,
+            ease: 'none',
+            stagger: 0.02,
+          },
+          howWorkPhaseStart
+        )
+
+      const ambientStep = { progress: 0 }
+      heroScrollTl.to(
+        ambientStep,
+        {
+          progress: 4,
+          duration: howWorkStepDuration * 4,
+          ease: 'none',
+          onUpdate: () => setAmbientStepProgress(ambientStep.progress),
+          onComplete: () => setAmbientStepProgress(4),
+        },
+        howWorkStepsStart
+      )
+
+      for (let i = 0; i < howWorkSteps.length; i++) {
+        heroScrollTl.to(
+          howWorkSteps[i],
+          {
+            opacity: 1,
+            yPercent: 0,
+            duration: howWorkStepDuration * 0.62,
+            ease: 'none',
+          },
+          howWorkStepsStart + howWorkStepDuration * i
+        )
+      }
 
       if (projectCards.length) {
         const ambientGridFadeStart =
@@ -553,22 +602,99 @@ export function HomeHero() {
     >
       <HeroSystemField className="opacity-[0.95]" data-hero-system-field />
       <div
-        data-hero-steel-field
-        className="pointer-events-none absolute inset-0 -z-10 field-radial-steel will-change-[opacity]"
-        aria-hidden
-      />
-      <div
-        data-enfoque-steel-field
-        className="pointer-events-none absolute inset-0 -z-[9] scale-x-[-1] field-radial-steel will-change-[opacity]"
-        aria-hidden
-      />
-      <div
         data-hero-noise
         className="noise-hero pointer-events-none absolute inset-0 -z-10 opacity-85"
         aria-hidden
       />
 
       <HomeProjectCardsGrid />
+      <div
+        data-how-work-block
+        className="pointer-events-none absolute inset-x-0 top-0 z-[12] px-6 pt-6 opacity-0 md:top-[7%] md:px-8"
+        aria-hidden
+      >
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="max-w-[20rem] md:max-w-[32rem]">
+            <p
+              data-how-work-legend
+              className="font-mono text-[0.67rem] tracking-[0.18em] text-primary uppercase opacity-0 will-change-[opacity,transform]"
+            >
+              Como trabajo
+            </p>
+            <h2 className="mt-3 text-[clamp(1.35rem,2.3vw,2.55rem)] font-semibold leading-[1.04] tracking-[-0.032em] text-foreground">
+              <span
+                data-how-work-line
+                className="block pb-[0.08em] opacity-0 will-change-[opacity,transform]"
+              >
+                Asi convierto ideas
+              </span>
+              <span
+                data-how-work-line
+                className="block pb-[0.08em] opacity-0 will-change-[opacity,transform]"
+              >
+                en sistemas que
+              </span>
+              <span
+                data-how-work-line
+                className="block pb-[0.08em] text-primary opacity-0 will-change-[opacity,transform]"
+              >
+                realmente funcionan
+              </span>
+            </h2>
+          </div>
+        </div>
+      </div>
+      <div
+        className="pointer-events-none absolute inset-x-0 top-[26%] z-[12] px-6 md:top-[22%] md:px-8"
+        aria-hidden
+      >
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 md:gap-10">
+          <article
+            data-how-work-step
+            className="max-w-[28rem] opacity-0 will-change-[opacity,transform]"
+          >
+            <p className="font-mono text-[2rem] tracking-[-0.04em] text-white/26">01</p>
+            <p className="mt-1 text-[clamp(1.05rem,1.35vw,1.35rem)] font-semibold text-primary">Entender</p>
+            <p className="mt-2 max-w-[28rem] text-[clamp(0.92rem,1vw,1.04rem)] leading-[1.65] text-muted-foreground">
+              Tu contexto, tu objetivo y lo que realmente esta en juego — sin importar si estas
+              empezando desde cero o expandiendo algo que ya existe.
+            </p>
+          </article>
+          <article
+            data-how-work-step
+            className="max-w-[28rem] opacity-0 will-change-[opacity,transform]"
+          >
+            <p className="font-mono text-[2rem] tracking-[-0.04em] text-white/26">02</p>
+            <p className="mt-1 text-[clamp(1.05rem,1.35vw,1.35rem)] font-semibold text-primary">Definir</p>
+            <p className="mt-2 max-w-[28rem] text-[clamp(0.92rem,1vw,1.04rem)] leading-[1.65] text-muted-foreground">
+              La solucion correcta para tu caso — web, plataforma, dashboard, ecommerce o
+              automatizacion. Sin vender lo que no necesitas.
+            </p>
+          </article>
+          <article
+            data-how-work-step
+            className="max-w-[28rem] opacity-0 will-change-[opacity,transform]"
+          >
+            <p className="font-mono text-[2rem] tracking-[-0.04em] text-white/26">03</p>
+            <p className="mt-1 text-[clamp(1.05rem,1.35vw,1.35rem)] font-semibold text-primary">Construir</p>
+            <p className="mt-2 max-w-[28rem] text-[clamp(0.92rem,1vw,1.04rem)] leading-[1.65] text-muted-foreground">
+              Scope claro, decisiones documentadas, entregas reales. Sin sorpresas a mitad del
+              camino.
+            </p>
+          </article>
+          <article
+            data-how-work-step
+            className="max-w-[28rem] opacity-0 will-change-[opacity,transform]"
+          >
+            <p className="font-mono text-[2rem] tracking-[-0.04em] text-white/26">04</p>
+            <p className="mt-1 text-[clamp(1.05rem,1.35vw,1.35rem)] font-semibold text-primary">Dejar una base</p>
+            <p className="mt-2 max-w-[28rem] text-[clamp(0.92rem,1vw,1.04rem)] leading-[1.65] text-muted-foreground">
+              No solo que funcione hoy. Que puedas operar, mantener y escalar sin depender de mi
+              para cada cambio.
+            </p>
+          </article>
+        </div>
+      </div>
 
       <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-6 py-10 md:py-12">
         <div ref={copyRef} className="relative z-[4] max-w-[72rem]">
