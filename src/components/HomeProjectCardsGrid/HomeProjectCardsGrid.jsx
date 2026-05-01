@@ -11,7 +11,14 @@ export function HomeProjectCardsGrid() {
       className="pointer-events-none absolute inset-0 z-[11] flex items-center justify-center px-4 py-16 md:px-8 md:py-20"
       aria-hidden
     >
-      <div className="pointer-events-none grid w-full max-w-6xl grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
+      <div className="pointer-events-none flex w-full max-w-6xl flex-col gap-5 md:gap-6">
+        <p
+          data-project-grid-label
+          className="font-mono text-[0.75rem] tracking-[0.18em] text-primary uppercase opacity-0 will-change-[opacity,transform] md:text-[0.82rem]"
+        >
+          Mis Proyectos
+        </p>
+        <div className="grid w-full grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
         {SHOWCASE_PROJECTS.map((project, index) => (
           <article
             key={project.slug}
@@ -87,6 +94,7 @@ export function HomeProjectCardsGrid() {
             <span className="sr-only">{project.title}</span>
           </article>
         ))}
+        </div>
       </div>
     </div>
   )

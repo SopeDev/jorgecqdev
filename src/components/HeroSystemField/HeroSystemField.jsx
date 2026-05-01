@@ -5,9 +5,9 @@ import { useMotionSafe } from '@/hooks/useMotionSafe'
 import { cn } from '@/lib/utils'
 
 /** Node counts per layered canvas (see `HeroSystemField`). */
-export const HERO_FIELD_FOCUS_NODE_COUNT = 30
-export const HERO_FIELD_SCATTER_NODE_COUNT = 30
-export const HERO_FIELD_AMBIENT_NODE_COUNT = 80
+export const HERO_FIELD_FOCUS_NODE_COUNT = 40
+export const HERO_FIELD_SCATTER_NODE_COUNT = 40
+export const HERO_FIELD_AMBIENT_NODE_COUNT = 60
 
 const LINE_ALPHA_MAX = 0.26
 const NODE_ALPHA = 0.7
@@ -49,6 +49,10 @@ const AMBIENT_CLUSTER_COUNT = 4
 const AMBIENT_TEAL_RGB = { r: 87, g: 191, b: 190 }
 /** Additional glow/fill intensity once ambient clusters are teal. */
 const AMBIENT_TEAL_BRIGHTNESS_FR = 1
+/** Teal halo intensity tied to per-step activation window (0→1→0). */
+const AMBIENT_TEAL_STEP_GLOW_ALPHA = 0.58
+/** Radius multiplier for step glow so it reads as a soft aura. */
+const AMBIENT_TEAL_STEP_GLOW_R_FR = 3.4
 /** Push distance at progress 1 as a fraction of max(viewport w,h). */
 const SCATTER_EXIT_FR = 1.08
 /** Spread within each ambient cluster vs min(viewport side). */
@@ -503,6 +507,7 @@ function NodeLayer({
         const nx = rx[i]
         const ny = ry[i]
         let ambientTealMix = 0
+        let ambientTealGlowMix = 0
         const breathe = 0.88 + 0.12 * Math.sin(t * 0.9 + n.phase)
         const intensity =
           DEPTH_INTENSITY_MIN_FR + (1 - DEPTH_INTENSITY_MIN_FR) * n.depth
@@ -517,7 +522,11 @@ function NodeLayer({
             Math.floor(i / nodesPerAmbientCluster)
           )
           const tealMix = clamp01(ambientStepProgress - bundle)
+          const stepGlowMix = clamp01(
+            1 - Math.abs((ambientStepProgress - bundle) - 1)
+          )
           ambientTealMix = tealMix
+          ambientTealGlowMix = stepGlowMix
           const r = Math.round(255 + (AMBIENT_TEAL_RGB.r - 255) * tealMix)
           const g = Math.round(255 + (AMBIENT_TEAL_RGB.g - 255) * tealMix)
           const b = Math.round(255 + (AMBIENT_TEAL_RGB.b - 255) * tealMix)
@@ -527,6 +536,19 @@ function NodeLayer({
         }
         const brightnessBoost =
           1 + ambientTealMix * AMBIENT_TEAL_BRIGHTNESS_FR
+        if (ambientTealGlowMix > 0) {
+          const stepGlowAlpha =
+            AMBIENT_TEAL_STEP_GLOW_ALPHA *
+            ambientTealGlowMix *
+            breathe *
+            intensity
+          const stepGlowRadius = outerR * AMBIENT_TEAL_STEP_GLOW_R_FR
+          ctx.fillStyle = `rgb(${AMBIENT_TEAL_RGB.r} ${AMBIENT_TEAL_RGB.g} ${AMBIENT_TEAL_RGB.b})`
+          ctx.globalAlpha = stepGlowAlpha
+          ctx.beginPath()
+          ctx.arc(nx, ny, stepGlowRadius, 0, Math.PI * 2)
+          ctx.fill()
+        }
         ctx.globalAlpha = NODE_GLOW_ALPHA * breathe * intensity * brightnessBoost
         ctx.beginPath()
         ctx.arc(nx, ny, outerR, 0, Math.PI * 2)
