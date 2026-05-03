@@ -20,7 +20,7 @@ export default function ContactPage() {
             Contacto
           </h1>
           <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-            Si tienes algo que quieres construir — o algo que ya no rinde como debería — cuéntalo en
+            Si hay algo que quieras construir — o algo que ya no rinde como debería — cuéntalo en
             pocas líneas. Con eso alcanza para ver si tiene sentido seguir.
           </p>
           <p className="mt-4 text-sm text-muted-foreground">

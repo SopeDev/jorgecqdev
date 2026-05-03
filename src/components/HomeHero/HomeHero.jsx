@@ -139,8 +139,8 @@ export function HomeHero() {
       if (prefersReduced) {
         gsap.set(heroCopy, { opacity: 1 })
         gsap.set(titleLines, { yPercent: 0 })
-        gsap.set(paragraph, { opacity: 1 })
-        gsap.set(actions, { opacity: 1 })
+        gsap.set(paragraph, { autoAlpha: 1 })
+        gsap.set(actions, { autoAlpha: 1 })
         gsap.set(focusBlock, { autoAlpha: 1 })
         gsap.set(focusHeading, { opacity: 1, filter: 'blur(0px)' })
         gsap.set(focusClipRevealEls, { yPercent: 0 })
@@ -260,7 +260,7 @@ export function HomeHero() {
         .to(
           paragraph,
           {
-            opacity: 0,
+            autoAlpha: 0,
             duration: heroOutDuration,
             ease: 'none',
           },
@@ -269,7 +269,7 @@ export function HomeHero() {
         .to(
           actions,
           {
-            opacity: 0,
+            autoAlpha: 0,
             duration: heroOutDuration,
             ease: 'none',
           },
@@ -551,8 +551,8 @@ export function HomeHero() {
       const setIntroToFinishedState = () => {
         gsap.set(heroCopy, { opacity: 1 })
         gsap.set(titleLines, { yPercent: 0 })
-        gsap.set(paragraph, { opacity: 1 })
-        gsap.set(actions, { opacity: 1 })
+        gsap.set(paragraph, { autoAlpha: 1 })
+        gsap.set(actions, { autoAlpha: 1 })
         gsap.set(scrollIndicator, { opacity: 1 })
         gsap.set(scrollIndicatorLine, { scaleY: 1, transformOrigin: 'bottom center' })
         gsap.set(scrollIndicatorLabel, { opacity: 1, yPercent: 0 })
@@ -584,8 +584,8 @@ export function HomeHero() {
       if (atPageTop()) {
         gsap.set(heroCopy, { opacity: 1 })
         gsap.set(titleLines, { yPercent: 112 })
-        gsap.set(paragraph, { opacity: 0 })
-        gsap.set(actions, { opacity: 0 })
+        gsap.set(paragraph, { autoAlpha: 0 })
+        gsap.set(actions, { autoAlpha: 0 })
         gsap.set(scrollIndicator, { opacity: 0 })
         gsap.set(scrollIndicatorLine, { scaleY: 0.1, transformOrigin: 'bottom center' })
         gsap.set(scrollIndicatorLabel, { opacity: 0, yPercent: 112 })
@@ -606,7 +606,7 @@ export function HomeHero() {
         .to(
           paragraph,
           {
-            opacity: 1,
+            autoAlpha: 1,
             duration: 0.55,
             ease: 'power2.out',
           },
@@ -615,7 +615,7 @@ export function HomeHero() {
         .to(
           actions,
           {
-            opacity: 1,
+            autoAlpha: 1,
             duration: 0.45,
             ease: 'power2.out',
           },
@@ -723,14 +723,14 @@ export function HomeHero() {
               data-how-work-legend
               className="font-mono text-[0.67rem] tracking-[0.18em] text-primary uppercase opacity-0 will-change-[opacity,transform]"
             >
-              Como trabajo
+              Cómo trabajo
             </p>
             <h2 className="mt-3 text-[clamp(1.35rem,2.3vw,2.55rem)] font-semibold leading-[1.04] tracking-[-0.032em] text-foreground">
               <span
                 data-how-work-line
                 className="block pb-[0.08em] opacity-0 will-change-[opacity,transform]"
               >
-                Asi convierto ideas
+                Así convierto ideas
               </span>
               <span
                 data-how-work-line
@@ -742,7 +742,7 @@ export function HomeHero() {
                 data-how-work-line
                 className="block pb-[0.08em] text-primary opacity-0 will-change-[opacity,transform]"
               >
-                realmente funcionan
+                realmente funcionan.
               </span>
             </h2>
           </div>
@@ -757,7 +757,7 @@ export function HomeHero() {
               <div>
                 <p className="text-[clamp(1.05rem,1.35vw,1.35rem)] font-semibold text-primary">Entender</p>
                 <p className="mt-2 max-w-[28rem] text-[clamp(0.92rem,1vw,1.04rem)] leading-[1.65] text-muted-foreground">
-                  Tu contexto, tu objetivo y lo que realmente esta en juego — sin importar si estas
+                  Tu contexto, tu objetivo y lo que realmente está en juego — sin importar si estás
                   empezando desde cero o expandiendo algo que ya existe.
                 </p>
               </div>
@@ -774,8 +774,8 @@ export function HomeHero() {
               <div>
                 <p className="text-[clamp(1.05rem,1.35vw,1.35rem)] font-semibold text-primary">Definir</p>
                 <p className="mt-2 max-w-[28rem] text-[clamp(0.92rem,1vw,1.04rem)] leading-[1.65] text-muted-foreground">
-                  La solucion correcta para tu caso — web, plataforma, dashboard, ecommerce o
-                  automatizacion. Sin vender lo que no necesitas.
+                  La solución correcta para tu caso — web, plataforma, dashboard, e-commerce o
+                  automatización. Sin vender lo que no necesitas.
                 </p>
               </div>
             </div>
@@ -808,7 +808,7 @@ export function HomeHero() {
               <div>
                 <p className="text-[clamp(1.05rem,1.35vw,1.35rem)] font-semibold text-primary">Dejar una base</p>
                 <p className="mt-2 max-w-[28rem] text-[clamp(0.92rem,1vw,1.04rem)] leading-[1.65] text-muted-foreground">
-                  No solo que funcione hoy. Que puedas operar, mantener y escalar sin depender de mi
+                  No solo que funcione hoy: que puedas operar, mantener y escalar sin depender de mí
                   para cada cambio.
                 </p>
               </div>
@@ -849,7 +849,7 @@ export function HomeHero() {
               data-hero-paragraph
               className="mt-8 max-w-[47rem] text-pretty text-[clamp(1rem,1.2vw,1.22rem)] font-normal leading-[1.75] text-muted-foreground"
             >
-              Plataformas, ecommerce, dashboards y herramientas a medida - para negocios que
+              Plataformas, e-commerce, dashboards y herramientas a medida — para negocios que
               quieren crecer, automatizar y construir a largo plazo.
             </p>
           </div>
@@ -966,7 +966,7 @@ export function HomeHero() {
               data-final-cta-text
               className="block text-right text-[clamp(0.92rem,1vw,1.04rem)] font-medium leading-[1.3] tracking-[-0.01em] text-foreground/80 will-change-transform"
             >
-              ¿Tienes algo que quieres convertir en un sistema real?
+              ¿Hay algo que quieras convertir en un sistema real?
             </p>
           </div>
           <div data-final-cta-button className="pointer-events-auto opacity-0">

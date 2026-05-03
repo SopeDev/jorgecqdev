@@ -45,7 +45,7 @@ export const SHOWCASE_PROJECTS = [
     slug: 'chipxy-jewelry',
     client: 'Chipxy Jewelry',
     label: 'Chipxy Jewelry',
-    title: 'Ecommerce para marca de joyería',
+    title: 'E-commerce para una marca de joyería',
     liveUrl: 'https://example.com',
     imageSrc: '/chipxy.png',
     brandBg: '#1E1E1E',

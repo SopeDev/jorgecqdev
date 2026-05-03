@@ -22,8 +22,8 @@ export function HomeProjects() {
         align="left"
       >
         <p>
-          Casos y referencias. Contexto, qué se construyó y qué aporta — sin maquillar demos como
-          clientes.
+          Casos y referencias. Contexto, qué se construyó y qué aporta — sin vender demos como
+          casos de cliente.
         </p>
       </SectionIntro>
 
