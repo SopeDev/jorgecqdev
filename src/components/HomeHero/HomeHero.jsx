@@ -11,6 +11,14 @@ import { HomeProjectCardsGrid } from '@/components/HomeProjectCardsGrid/HomeProj
 
 gsap.registerPlugin(ScrollTrigger)
 
+/** Touch-only: ignore small viewport height jitter (mobile URL bar) so pin + scrub stay stable. */
+let scrollTriggerMobileConfigDone = false
+function ensureScrollTriggerMobileConfig() {
+  if (scrollTriggerMobileConfigDone || typeof window === 'undefined') return
+  scrollTriggerMobileConfigDone = true
+  ScrollTrigger.config({ ignoreMobileResize: true })
+}
+
 export function HomeHero() {
   const copyRef = useRef(null)
   const sectionRef = useRef(null)
@@ -23,7 +31,9 @@ export function HomeHero() {
     let introSettled = false
     let onLateScrollCheck = () => {}
     let onResizeIntro = () => {}
+    let onVisualViewportResize = () => {}
     let lateCheckTimeout = 0
+    let refreshDebounce = 0
     const section = sectionRef.current
     const copy = copyRef.current
     if (!section || !copy) return
@@ -72,16 +82,14 @@ export function HomeHero() {
         titleInDelay + titleInDuration + titleInStagger * Math.max(0, titleLines.length - 1) + 0.08
       const indicatorInDelay = paragraphInDelay + 0.5
       /**
-       * Timeline units: 4 per 100lvh of pin scroll. Example: 1 unit = 25lvh.
+       * Timeline units: 4 per ~100vh of pin scroll (conceptual; pin end uses section height).
        */
       const UNITS_PER_VH = 4
       const SCROLL_DISTANCE_SCALE = 0.6
-      /** Narrow screens: slower scrub via extra scroll distance (multiplier on pin end). */
-      const mobileScrollSlowFactor = () =>
-        typeof window !== 'undefined' &&
-        window.matchMedia('(max-width: 767px)').matches
-          ? 1.5
-          : 1
+      const isNarrowViewport = () =>
+        typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+      /** Narrow screens: extra pin distance so the same story reads slower on small viewports. */
+      const mobileScrollSlowFactor = () => (isNarrowViewport() ? 1.5 : 1)
       const SEG_HERO = 4
       const SEG_ENF = 4
       /** 25vh gap between "Mi enfoque" header and Enfoque title reveal. */
@@ -208,10 +216,8 @@ export function HomeHero() {
           : 0
       const ambientClusterPhaseStart =
         cardsPhaseStart + cardsStaggerAmount + cardsPhaseDuration
-      const viewportH =
-        typeof window !== 'undefined'
-          ? window.visualViewport?.height ?? window.innerHeight
-          : 800
+      /** Prefer `innerHeight` over `visualViewport` — VV jumps during iOS chrome / rubber-band and skews durations vs pin height. */
+      const viewportH = typeof window !== 'undefined' ? window.innerHeight : 800
       /** Timeline slice whose scrub span equals ~100vh given pin mapping `UNITS_PER_VH`. */
       const ambientClusterPhaseDuration = Math.max(
         0.05,
@@ -527,6 +533,8 @@ export function HomeHero() {
         }
       }
 
+      ensureScrollTriggerMobileConfig()
+
       ScrollTrigger.create({
         animation: heroScrollTl,
         trigger: section,
@@ -534,16 +542,18 @@ export function HomeHero() {
         end: () =>
           `+=${section.offsetHeight * (heroScrollTl.duration() / UNITS_PER_VH) * mobileScrollSlowFactor() * SCROLL_DISTANCE_SCALE}`,
         pin: true,
-        pinType: 'fixed',
+        /** Let GSAP pick pinning strategy; forced `fixed` is a common source of iOS glitches. */
         pinSpacing: true,
-        scrub: 0.45,
+        /** Tighter scrub on narrow viewports so fast flicks stay closer to scroll position. */
+        scrub: isNarrowViewport() ? 0.22 : 0.45,
         anticipatePin: 1,
+        fastScrollEnd: isNarrowViewport(),
         /**
-         * `invalidateOnRefresh: true` makes ScrollTrigger call `timeline.revert().invalidate()`
-         * on refresh, which resets scrubbed proxy props (scatter/focus progress) toward 0 and
-         * flashes the canvases mid-scroll — noticeable on mobile when address bar/layout shifts.
+         * Must stay true so pin distance and scrub range track `section` height after
+         * `svh`/resize/orientation. Proxy tweens stay aligned because we no longer call
+         * `timeline.invalidate()` on every window resize (that was desyncing scroll vs state).
          */
-        invalidateOnRefresh: false,
+        invalidateOnRefresh: true,
       })
 
       const atPageTop = () => window.scrollY <= 2
@@ -655,16 +665,29 @@ export function HomeHero() {
           bypassIntro()
         }
       }
+      const scheduleScrollTriggerRefresh = () => {
+        window.clearTimeout(refreshDebounce)
+        refreshDebounce = window.setTimeout(() => {
+          ScrollTrigger.refresh()
+        }, 180)
+      }
+
       onResizeIntro = () => {
         if (!introSettled) {
           bypassIntro()
           return
         }
-        invalidatePinnedHeroBaseline()
-        ScrollTrigger.refresh()
+        scheduleScrollTriggerRefresh()
+      }
+      onVisualViewportResize = () => {
+        if (!introSettled) return
+        scheduleScrollTriggerRefresh()
       }
       window.addEventListener('load', onLateScrollCheck, { once: true })
       window.addEventListener('resize', onResizeIntro)
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        window.visualViewport.addEventListener('resize', onVisualViewportResize)
+      }
       requestAnimationFrame(() => {
         lateCheckTimeout = window.setTimeout(onLateScrollCheck, 0)
       })
@@ -688,7 +711,11 @@ export function HomeHero() {
     return () => {
       window.removeEventListener('load', onLateScrollCheck)
       window.removeEventListener('resize', onResizeIntro)
+      if (typeof window !== 'undefined' && window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', onVisualViewportResize)
+      }
       window.clearTimeout(lateCheckTimeout)
+      window.clearTimeout(refreshDebounce)
       window.cancelAnimationFrame(introRaf)
       window.cancelAnimationFrame(introCheckRaf)
       releaseScrollLock()
@@ -700,7 +727,7 @@ export function HomeHero() {
     <section
       ref={sectionRef}
       id="hero"
-      className="relative isolate flex min-h-[100vh] flex-col overflow-hidden border-b border-border bg-background"
+      className="relative isolate flex min-h-[100vh] min-h-[100svh] flex-col overflow-hidden border-b border-border bg-background"
       aria-labelledby="hero-heading"
       data-hero-section
     >
